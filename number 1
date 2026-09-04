@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自主默書小助手 - 功課班學生溫習神器</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-light: #eef2ff;
+      --success: #10b981;
+      --success-light: #ecfdf5;
+      --danger: #ef4444;
+      --danger-light: #fef2f2;
+      --warning: #f59e0b;
+      --warning-light: #fffbeb;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-600: #475569;
+      --gray-800: #1e293b;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+      --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang HK", "Microsoft JhengHei", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-main);
+    }
+
+    body {
+      background: linear-gradient(135deg, #f0f4ff 0%, #fdf2f8 100%);
+      color: var(--gray-800);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 14px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 720px;
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 26px 24px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .app-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .app-subtitle {
+      font-size: 14px;
+      color: var(--gray-600);
+      margin-top: 6px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: var(--gray-100);
+      padding: 5px;
+      border-radius: var(--radius-md);
+      margin-bottom: 20px;
+      gap: 6px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      border: none;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--gray-600);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .tab-btn.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gray-800);
+      margin-bottom: 8px;
+    }
+
+    .badge-recommend {
+      background: #fef08a;
+      color: #854d0e;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 6px;
+      margin-left: 6px;
+      font-weight: bold;
+    }
+
+    textarea, select, input[type="text"] {
+      width: 100%;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus, select:focus, input[type="text"]:focus {
+      border-color: var(--primary);
+    }
+
+    textarea {
+      min-height: 130px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .quick-presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .preset-btn {
+      background: var(--gray-100);
+      border: 1px solid var(--gray-200);
+      color: var(--gray-800);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .preset-btn:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 580px) {
+      .settings-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .btn-main {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 16px 20px;
+      font-size: 18px;
+      font-weight: 800;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-main:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--gray-100);
+      color: var(--gray-800);
+      border: 1px solid var(--gray-200);
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: var(--gray-200);
+    }
+
+    /* Runner View */
+    .runner-view, .review-view {
+      display: none;
+    }
+
+    .runner-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      background: var(--gray-100);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 22px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), #ec4899);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .card-display {
+      background: var(--primary-light);
+      border: 2px dashed #c7d2fe;
+      border-radius: var(--radius-lg);
+      padding: 36px 20px;
+      text-align: center;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .status-speaking {
+      background: #e0e7ff;
+      color: var(--primary);
+      animation: pulse 1.5s infinite;
+    }
+
+    .status-waiting {
+      background: var(--warning-light);
+      color: #b45309;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.02); }
+    }
+
+    .big-question-number {
+      font-size: 50px;
+      font-weight: 900;
+      color: var(--gray-800);
+      margin-bottom: 12px;
+    }
+
+    .countdown-circle {
+      font-size: 38px;
+      font-weight: 800;
+      color: #b45309;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .runner-controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .control-btn {
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .btn-replay { background: #e0e7ff; color: var(--primary); }
+    .btn-replay:hover { background: #c7d2fe; }
+
+    .btn-pause { background: var(--warning-light); color: #b45309; border: 1px solid #fde68a; }
+    .btn-pause:hover { background: #fef3c7; }
+
+    .btn-skip { background: var(--gray-100); color: var(--gray-800); }
+    .btn-skip:hover { background: var(--gray-200); }
+
+    .tip-box {
+      background: #f8fafc;
+      border-left: 4px solid var(--primary);
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--gray-600);
+      margin-top: 16px;
+      line-height: 1.5;
+    }
+
+    /* Review View */
+    .review-header {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .review-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--success);
+      margin-bottom: 6px;
+    }
+
+    .question-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+      max-height: 480px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .review-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--gray-50);
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      transition: all 0.15s;
+    }
+
+    .review-item.wrong {
+      background: var(--danger-light);
+      border-color: #fca5a5;
+    }
+
+    .review-item.correct {
+      background: var(--success-light);
+      border-color: #86efac;
+    }
+
+    .item-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .item-idx {
+      font-size: 14px;
+      color: var(--gray-600);
+      background: white;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--gray-200);
+    }
+
+    .item-play-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: var(--primary);
+    }
+
+    .judge-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .judge-btn {
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 8px;
+      border: 1.5px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-mark-right {
+      background: white;
+      color: var(--success);
+      border-color: var(--success);
+    }
+
+    .btn-mark-right.selected {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-mark-wrong {
+      background: white;
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .btn-mark-wrong.selected {
+      background: var(--danger);
+      color: white;
+    }
+
+    .review-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .typing-box {
+      margin-top: 14px;
+      text-align: center;
+    }
+
+    .typing-input {
+      font-size: 22px;
+      text-align: center;
+      padding: 14px;
+      max-width: 360px;
+      margin: 0 auto 12px auto;
+      display: block;
+    }
+
+    .feedback-text {
+      font-size: 16px;
+      font-weight: 700;
+      height: 24px;
+      margin-bottom: 12px;
+    }
+
+    footer {
+      font-size: 12px;
+      color: var(--gray-600);
+      text-align: center;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="app-title">
+        <span>🎒</span> 自主默書小助手
+      </div>
+      <div class="app-subtitle">功課班溫習神器 ‧ 學生免導師陪伴 ‧ 自行聽寫及對卷</div>
+    </header>
+
+    <!-- 主設定畫面 -->
+    <div id="setupView">
+      <div class="tabs">
+        <button class="tab-btn active" id="tabPaper" onclick="switchMode('paper')">
+          📝 紙筆實戰模式 <span class="badge-recommend">推薦功課班</span>
+        </button>
+        <button class="tab-btn" id="tabTyping" onclick="switchMode('typing')">
+          💻 螢幕打字拼寫
+        </button>
+      </div>
+
+      <div class="form-group">
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+          <label for="dictText">默書內容範圍（一行一個詞語或句子）：</label>
+          <span style="font-size:12px; color:var(--gray-600);" id="wordCountTip">共 0 題</span>
+        </div>
+        <textarea id="dictText" placeholder="請在此貼上或輸入默書內容，例如：
+春天
+美麗
+溫暖
+百花齊放
+或者英文：
+teacher
+student
+homework" oninput="updateWordCount()"></textarea>
+
+        <div class="quick-presets">
+          <span style="font-size:12px; color:var(--gray-600); align-self:center;">快速範例：</span>
+          <button class="preset-btn" onclick="loadPreset('chinese_words')">小學中文生字</button>
+          <button class="preset-btn" onclick="loadPreset('chinese_idioms')">中文成語短句</button>
+          <button class="preset-btn" onclick="loadPreset('english_spelling')">英文常考生字</button>
+          <button class="preset-btn" onclick="loadPreset('english_sentences')">英文默寫句子</button>
+          <button class="preset-btn" onclick="clearDictText()" style="color:var(--danger); border-color:#fecaca;">清空</button>
+        </div>
+      </div>
+
+      <div class="settings-grid">
+        <div class="form-group">
+          <label for="langSelect">🗣️ 報讀語言與口音：</label>
+          <select id="langSelect">
+            <option value="cantonese" selected>廣東話 / 粵語 (香港小學推薦)</option>
+            <option value="mandarin">普通話 / 國語</option>
+            <option value="english_uk">英國英語 (UK English)</option>
+            <option value="english_us">美國英語 (US English)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="speedSelect">⚡ 報讀語速：</label>
+          <select id="speedSelect">
+            <option value="0.75">稍慢 (初小 / 生字溫習)</option>
+            <option value="0.85" selected>標準默書語速 (推薦)</option>
+            <option value="1.0">正常說話速度</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="repeatGroup">
+          <label for="repeatSelect">🔁 每題重複報讀次數：</label>
+          <select id="repeatSelect">
+            <option value="1">讀 1 次</option>
+            <option value="2" selected>讀 2 次 (標準默書)</option>
+            <option value="3">讀 3 次 (加強記憶)</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="intervalGroup">
+          <label for="intervalSelect">⏳ 寫字等待時間 (每題間隔)：</label>
+          <select id="intervalSelect">
+            <option value="5">5 秒 (短字詞 / 快速)</option>
+            <option value="8" selected>8 秒 (適中推薦)</option>
+            <option value="12">12 秒 (句子或長詞語)</option>
+            <option value="16">16 秒 (整句書寫)</option>
+            <option value="20">20 秒 (初小慢寫)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-bottom:12px;">
+        <button class="btn-secondary" onclick="testVoice()" style="flex:1;">🔊 試聽發音效果</button>
+      </div>
+
+      <button class="btn-main" onclick="startDictation()">
+        <span>🚀</span> 開始自主溫習默書
+      </button>
+
+      <div class="tip-box" id="modeNotice">
+        💡 <strong>紙筆實戰模式操作指南：</strong><br>
+        學生只需準備好默書簿和筆，點擊「開始」後，系統會自動如同導師般依次報讀題目與倒數計時。完成後將顯示完整答案，學生使用紅筆逐題對卷自查，針對錯題可一鍵重溫！
+      </div>
+    </div>
+
+    <!-- 報讀進行中畫面 -->
+    <div id="runnerView" class="runner-view">
+      <div class="runner-header">
+        <button class="btn-secondary" onclick="quitRunner()">⬅️ 結束並返回</button>
+        <span id="progressText" style="font-weight:700; font-size:15px; color:var(--primary);">第 1 題 / 共 10 題</span>
+      </div>
+
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+
+      <div class="card-display">
+        <div id="statusBadge" class="status-badge status-speaking">
+          📢 正在朗讀中...
+        </div>
+
+        <div class="big-question-number" id="qNumberDisplay">第 1 題</div>
+
+        <div id="paperCountdownArea">
+          <div class="countdown-circle">
+            <span style="font-size:22px;">⏳</span> 
+            <span id="countdownSecs">8</span> 
+            <span style="font-size:16px; font-weight:normal; color:var(--gray-600);">秒寫字時間</span>
+          </div>
+          <p style="font-size:14px; color:var(--gray-600); margin-top:8px;">請在紙上寫下答案...</p>
+        </div>
+
+        <div id="typingArea" class="typing-box" style="display:none;">
+          <input type="text" id="typeAnswerInput" class="typing-input" placeholder="在此輸入答案..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="handleTypingKey(event)">
+          <div id="typingFeedback" class="feedback-text"></div>
+          <button class="btn-main" style="max-width:240px; margin:0 auto; padding:10px 18px; font-size:15px;" onclick="checkTypingAnswer()">確定 (Enter)</button>
+        </div>
+      </div>
+
+      <div class="runner-controls">
+        <button class="control-btn btn-replay" onclick="manualReplay()">
+          🔊 重聽本題
+        </button>
+        <button class="control-btn btn-pause" id="pauseBtn" onclick="togglePause()">
+          ⏸️ 暫停
+        </button>
+        <button class="control-btn btn-skip" onclick="skipToNext()">
+          ⏭️ 下一題
+        </button>
+      </div>
+
+      <div style="text-align:center; margin-top:12px;">
+        <button class="btn-secondary" style="font-size:13px; color:var(--danger);" onclick="finishDictationEarly()">
+          🏁 提前結束，直接看答案
+        </button>
+      </div>
+    </div>
+
+    <!-- 自查核對與錯題溫習畫面 -->
+    <div id="reviewView" class="review-view">
+      <div class="review-header">
+        <div class="review-title">🎉 默書完成！請拿出紅筆對卷</div>
+        <p style="font-size:14px; color:var(--gray-600);">對照下方正確答案，在您的默書簿上打勾或圈出寫錯的字：</p>
+      </div>
+
+      <div class="question-list" id="reviewList"></div>
+
+      <div class="review-actions">
+        <button class="btn-main" id="retryWrongBtn" style="background:#dc2626; flex:1;" onclick="retryWrongQuestions()">
+          🔁 重新溫習錯題 (<span id="wrongCountSpan">0</span> 題)
+        </button>
+        <button class="btn-secondary" style="flex:1;" onclick="restartAll()">
+          🔄 整份重新默一次
+        </button>
+        <button class="btn-secondary" style="flex:1;" onclick="backToHome()">
+          🏠 返回主選單
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    自主默書小助手 ‧ 專為功課班自主學習設計 ‧ 支援廣東話/普通話/英文發音
+  </footer>
+
+  <script>
+    let currentMode = 'paper';
+    let questions = [];
+    let currentIndex = 0;
+    let isRunning = false;
+    let isPaused = false;
+    let wrongIndices = new Set();
+
+    // 內建 Web Audio 提示音（無外部檔案依賴）
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep(freq = 600, duration = 0.15, type = 'sine') {
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        console.warn("Audio error", e);
+      }
+    }
+
+    // Web Speech API 語音模組
+    let synth = window.speechSynthesis;
+    let availableVoices = [];
+
+    function populateVoices() {
+      if (!synth) return;
+      availableVoices = synth.getVoices();
+    }
+    populateVoices();
+    if (synth && synth.onvoiceschanged !== undefined) {
+      synth.onvoiceschanged = populateVoices;
+    }
+
+    function getSelectedVoice(langCode) {
+      if (availableVoices.length === 0) availableVoices = synth.getVoices();
+      const matchRules = {
+        'cantonese': ['zh-HK', 'yue', 'zh-HKG', 'Chinese (Hong Kong)'],
+        'mandarin': ['zh-TW', 'zh-CN', 'cmn', 'Chinese (Taiwan)', 'Chinese (China)'],
+        'english_uk': ['en-GB', 'en-uk', 'English United Kingdom'],
+        'english_us': ['en-US', 'en-us', 'English United States']
+      };
+      const rules = matchRules[langCode] || ['zh-HK'];
+      for (const keyword of rules) {
+        const found = availableVoices.find(v => 
+          v.lang.toLowerCase().includes(keyword.toLowerCase()) || 
+          v.name.toLowerCase().includes(keyword.toLowerCase())
+        );
+        if (found) return found;
+      }
+      return null;
+    }
+
+    function speakText(text, langCode, rate = 0.85) {
+      return new Promise((resolve) => {
+        if (!synth) { resolve(); return; }
+        synth.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        const voice = getSelectedVoice(langCode);
+        if (voice) {
+          utterance.voice = voice;
+        } else {
+          if (langCode === 'cantonese') utterance.lang = 'zh-HK';
+          else if (langCode === 'mandarin') utterance.lang = 'zh-CN';
+          else if (langCode === 'english_uk') utterance.lang = 'en-GB';
+          else utterance.lang = 'en-US';
+        }
+        utterance.rate = parseFloat(rate) || 0.85;
+        utterance.pitch = 1.0;
+        utterance.onend = () => resolve();
+        utterance.onerror = () => resolve();
+        synth.speak(utterance);
+      });
+    }
+
+    function switchMode(mode) {
+      currentMode = mode;
+      document.getElementById('tabPaper').classList.toggle('active', mode === 'paper');
+      document.getElementById('tabTyping').classList.toggle('active', mode === 'typing');
+      const isPaper = (mode === 'paper');
+      document.getElementById('intervalGroup').style.display = isPaper ? 'block' : 'none';
+      document.getElementById('modeNotice').innerHTML = isPaper 
+        ? '💡 <strong>紙筆實戰模式操作指南：</strong><br>學生只需準備好默書簿和筆，點擊「開始」後，系統會自動如同導師般依次報讀題目與倒數計時。完成後將顯示完整答案，學生使用紅筆逐題對卷自查，針對錯題可一鍵重溫！'
+        : '💡 <strong>螢幕打字模式操作指南：</strong><br>適合高小學生練習打字拼寫或英文生字 (Spelling)。系統播放語音後，學生在輸入框打出正確拼字並按 Enter 提交核對。';
+    }
+
+    const PRESETS = {
+      chinese_words: "春天\n學校\n美麗\n同學\n認真\n禮貌\n健康\n快樂",
+      chinese_idioms: "百花齊放\n欣欣向榮\n專心致志\n齊心協力\n知錯能改",
+      english_spelling: "pencil\nteacher\nschool\nlibrary\nfriend\nsubject\nlisten\npractice",
+      english_sentences: "Good morning, teacher.\nI like reading storybooks.\nWe should keep the classroom clean."
+    };
+
+    function loadPreset(key) {
+      document.getElementById('dictText').value = PRESETS[key] || '';
+      updateWordCount();
+      if (key.startsWith('chinese')) {
+        document.getElementById('langSelect').value = 'cantonese';
+      } else {
+        document.getElementById('langSelect').value = 'english_uk';
+      }
+    }
+
+    function clearDictText() {
+      document.getElementById('dictText').value = '';
+      updateWordCount();
+    }
+
+    function updateWordCount() {
+      const parsed = parseQuestions(document.getElementById('dictText').value);
+      document.getElementById('wordCountTip').innerText = `共 ${parsed.length} 題`;
+    }
+
+    function parseQuestions(text) {
+      if (!text) return [];
+      return text.split(/[\n,，、;；]+/).map(s => s.trim()).filter(s => s.length > 0);
+    }
+
+    function testVoice() {
+      const lang = document.getElementById('langSelect').value;
+      const rate = document.getElementById('speedSelect').value;
+      let sample = "這是自主默書發音測試。";
+      if (lang === 'cantonese') sample = "這裏是廣東話默書發音測試，準備好了嗎？";
+      else if (lang === 'mandarin') sample = "這裡是普通話默寫發音測試，準備好了嗎？";
+      else sample = "This is a dictation voice test. Are you ready?";
+      speakText(sample, lang, rate);
+    }
+
+    function startDictation(overrideQuestions = null) {
+      if (overrideQuestions) {
+        questions = overrideQuestions;
+      } else {
+        questions = parseQuestions(document.getElementById('dictText').value);
+      }
+
+      if (questions.length === 0) {
+        alert("請先輸入或貼上默書題目！");
+        return;
+      }
+
+      localStorage.setItem('last_dict_text', document.getElementById('dictText').value);
+      localStorage.setItem('last_dict_lang', document.getElementById('langSelect').value);
+
+      currentIndex = 0;
+      isRunning = true;
+      isPaused = false;
+      wrongIndices.clear();
+
+      document.getElementById('setupView').style.display = 'none';
+      document.getElementById('reviewView').style.display = 'none';
+      document.getElementById('runnerView').style.display = 'block';
+
+      if (currentMode === 'paper') {
+        document.getElementById('paperCountdownArea').style.display = 'block';
+        document.getElementById('typingArea').style.display = 'none';
+        runPaperStep();
+      } else {
+        document.getElementById('paperCountdownArea').style.display = 'none';
+        document.getElementById('typingArea').style.display = 'block';
+        runTypingStep();
+      }
+    }
+
+    function updateProgress() {
+      const progressPercent = ((currentIndex) / questions.length) * 100;
+      document.getElementById('progressFill').style.width = `${progressPercent}%`;
+      document.getElementById('progressText').innerText = `第 ${currentIndex + 1} 題 / 共 ${questions.length} 題`;
+      document.getElementById('qNumberDisplay').innerText = `第 ${currentIndex + 1} 題`;
+    }
+
+    async function runPaperStep() {
+      if (!isRunning) return;
+      if (currentIndex >= questions.length) {
+        finishDictation();
+        return;
+      }
+
+      updateProgress();
+      const currentWord = questions[currentIndex];
+      const repeatCount = parseInt(document.getElementById('repeatSelect').value) || 2;
+      const intervalSecs = parseInt(document.getElementById('intervalSelect').value) || 8;
+      const lang = document.getElementById('langSelect').value;
+      const rate = document.getElementById('speedSelect').value;
+
+      for (let r = 1; r <= repeatCount; r++) {
+        if (!isRunning) return;
+        while (isPaused) await sleep(200);
+
+        playBeep(520, 0.1);
+        setStatus("📢 報讀中...", "status-speaking");
+        document.getElementById('paperCountdownArea').style.opacity = '0.4';
+
+        await speakText(currentWord, lang, rate);
+        if (r < repeatCount) await sleep(1400);
+      }
+
+      setStatus("✏️ 請在紙上寫字...", "status-waiting");
+      document.getElementById('paperCountdownArea').style.opacity = '1';
+
+      for (let s = intervalSecs; s >= 1; s--) {
+        if (!isRunning) return;
+        while (isPaused) await sleep(200);
+        document.getElementById('countdownSecs').innerText = s;
+        if (s <= 3) playBeep(440, 0.08);
+        await sleep(1000);
+      }
+
+      if (isRunning) {
+        currentIndex++;
+        runPaperStep();
+      }
+    }
+
+    async function runTypingStep() {
+      if (!isRunning) return;
+      if (currentIndex >= questions.length) {
+        finishDictation();
+        return;
+      }
+
+      updateProgress();
+      const currentWord = questions[currentIndex];
+      const lang = document.getElementById('langSelect').value;
+      const rate = document.getElementById('speedSelect').value;
+
+      setStatus("🎧 請仔細聽發音並打字", "status-speaking");
+      const inputEl = document.getElementById('typeAnswerInput');
+      inputEl.value = '';
+      inputEl.disabled = false;
+      inputEl.focus();
+      document.getElementById('typingFeedback').innerText = '';
+
+      playBeep(520, 0.1);
+      await speakText(currentWord, lang, rate);
+    }
+
+    function handleTypingKey(event) {
+      if (event.key === 'Enter') checkTypingAnswer();
+    }
+
+    async function checkTypingAnswer() {
+      const inputEl = document.getElementById('typeAnswerInput');
+      const userInput = inputEl.value.trim();
+      const targetWord = questions[currentIndex].trim();
+      const feedbackEl = document.getElementById('typingFeedback');
+
+      const isCorrect = (userInput.toLowerCase() === targetWord.toLowerCase());
+      inputEl.disabled = true;
+
+      if (isCorrect) {
+        playBeep(880, 0.2);
+        feedbackEl.style.color = "var(--success)";
+        feedbackEl.innerText = "🎉 答對了！太棒了！";
+      } else {
+        playBeep(260, 0.3, 'triangle');
+        feedbackEl.style.color = "var(--danger)";
+        feedbackEl.innerText = `❌ 正確答案是：${targetWord}`;
+        wrongIndices.add(currentIndex);
+      }
+
+      await sleep(1400);
+      currentIndex++;
+      runTypingStep();
+    }
+
+    function setStatus(text, className) {
+      const badge = document.getElementById('statusBadge');
+      badge.innerText = text;
+      badge.className = `status-badge ${className}`;
+    }
+
+    function manualReplay() {
+      if (currentIndex < questions.length) {
+        const lang = document.getElementById('langSelect').value;
+        const rate = document.getElementById('speedSelect').value;
+        speakText(questions[currentIndex], lang, rate);
+      }
+    }
+
+    function togglePause() {
+      isPaused = !isPaused;
+      const btn = document.getElementById('pauseBtn');
+      if (isPaused) {
+        btn.innerText = "▶️ 繼續";
+        setStatus("⏸️ 已暫停", "status-waiting");
+        synth.pause();
+      } else {
+        btn.innerText = "⏸️ 暫停";
+        setStatus("📢 繼續溫習中...", "status-speaking");
+        synth.resume();
+      }
+    }
+
+    function skipToNext() {
+      synth.cancel();
+      currentIndex++;
+      if (currentMode === 'paper') runPaperStep();
+      else runTypingStep();
+    }
+
+    function finishDictationEarly() {
+      synth.cancel();
+      finishDictation();
+    }
+
+    function quitRunner() {
+      if (confirm("確定要中止當前默書並返回主選單嗎？")) {
+        isRunning = false;
+        synth.cancel();
+        backToHome();
+      }
+    }
+
+    function finishDictation() {
+      isRunning = false;
+      synth.cancel();
+      playBeep(784, 0.25);
+
+      document.getElementById('runnerView').style.display = 'none';
+      document.getElementById('reviewView').style.display = 'block';
+
+      const listContainer = document.getElementById('reviewList');
+      listContainer.innerHTML = '';
+
+      questions.forEach((q, idx) => {
+        const isAlreadyMarkedWrong = wrongIndices.has(idx);
+        const item = document.createElement('div');
+        item.className = `review-item ${isAlreadyMarkedWrong ? 'wrong' : ''}`;
+        item.id = `reviewItem_${idx}`;
+
+        item.innerHTML = `
+          <div class="item-info">
+            <span class="item-idx">#${idx + 1}</span>
+            <button class="item-play-btn" title="聽發音" onclick="playSingleWord('${encodeURIComponent(q)}')">🔊</button>
+            <span>${escapeHtml(q)}</span>
+          </div>
+          <div class="judge-btns">
+            <button class="judge-btn btn-mark-right ${!isAlreadyMarkedWrong ? 'selected' : ''}" onclick="markResult(${idx}, true)">
+              ✔️ 正確
+            </button>
+            <button class="judge-btn btn-mark-wrong ${isAlreadyMarkedWrong ? 'selected' : ''}" onclick="markResult(${idx}, false)">
+              ❌ 寫錯了
+            </button>
+          </div>
+        `;
+        listContainer.appendChild(item);
+      });
+
+      updateWrongCountDisplay();
+    }
+
+    function markResult(index, isCorrect) {
+      const itemEl = document.getElementById(`reviewItem_${index}`);
+      const btnRight = itemEl.querySelector('.btn-mark-right');
+      const btnWrong = itemEl.querySelector('.btn-mark-wrong');
+
+      if (isCorrect) {
+        wrongIndices.delete(index);
+        itemEl.classList.remove('wrong');
+        itemEl.classList.add('correct');
+        btnRight.classList.add('selected');
+        btnWrong.classList.remove('selected');
+      } else {
+        wrongIndices.add(index);
+        itemEl.classList.remove('correct');
+        itemEl.classList.add('wrong');
+        btnWrong.classList.add('selected');
+        btnRight.classList.remove('selected');
+      }
+      updateWrongCountDisplay();
+    }
+
+    function updateWrongCountDisplay() {
+      const count = wrongIndices.size;
+      document.getElementById('wrongCountSpan').innerText = count;
+      const retryBtn = document.getElementById('retryWrongBtn');
+      retryBtn.style.display = count > 0 ? 'block' : 'none';
+    }
+
+    function retryWrongQuestions() {
+      const wrongList = Array.from(wrongIndices).map(idx => questions[idx]);
+      if (wrongList.length === 0) {
+        alert("太棒了！沒有需要重溫的錯題！");
+        return;
+      }
+      startDictation(wrongList);
+    }
+
+    function restartAll() {
+      startDictation(questions);
+    }
+
+    function backToHome() {
+      isRunning = false;
+      synth.cancel();
+      document.getElementById('runnerView').style.display = 'none';
+      document.getElementById('reviewView').style.display = 'none';
+      document.getElementById('setupView').style.display = 'block';
+    }
+
+    function playSingleWord(encodedText) {
+      const text = decodeURIComponent(encodedText);
+      const lang = document.getElementById('langSelect').value;
+      const rate = document.getElementById('speedSelect').value;
+      speakText(text, lang, rate);
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedText = localStorage.getItem('last_dict_text');
+      const savedLang = localStorage.getItem('last_dict_lang');
+      if (savedText) {
+        document.getElementById('dictText').value = savedText;
+        updateWordCount();
+      } else {
+        loadPreset('chinese_words');
+      }
+      if (savedLang) {
+        document.getElementById('langSelect').value = savedLang;
+      }
+    });
+  </script>
+</body>
+</html>
