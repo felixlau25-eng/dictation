@@ -3,1111 +3,870 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>自主默書小助手 - 功課班學生溫習神器</title>
+  <title>自主默書小助手 - 粵語報讀 · 詞語 / 句子 / 篇章</title>
+  <meta name="description" content="功課班學生自行聽寫對卷。香港粵語報讀，支援詞語、句子與篇章默書。">
   <style>
     :root {
-      --primary: #4f46e5;
-      --primary-hover: #4338ca;
-      --primary-light: #eef2ff;
-      --success: #10b981;
-      --success-light: #ecfdf5;
-      --danger: #ef4444;
-      --danger-light: #fef2f2;
-      --warning: #f59e0b;
-      --warning-light: #fffbeb;
-      --gray-50: #f8fafc;
-      --gray-100: #f1f5f9;
-      --gray-200: #e2e8f0;
-      --gray-600: #475569;
-      --gray-800: #1e293b;
-      --radius-lg: 18px;
-      --radius-md: 12px;
-      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
-      --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang HK", "Microsoft JhengHei", sans-serif;
+      --paper: #f3eee4;
+      --paper-raised: #faf7f1;
+      --ink: #1c1917;
+      --ink-muted: #57534e;
+      --ink-subtle: #78716c;
+      --rule: #e7e0d4;
+      --teal: #0f5c56;
+      --teal-hover: #0c4a45;
+      --teal-soft: #e6f2f0;
+      --seal: #9b1c1c;
+      --seal-soft: #fde8e8;
+      --ok: #166534;
+      --ok-soft: #e7f3ea;
+      --radius: 16px;
+      --font: "Noto Sans TC", "PingFang HK", "Microsoft JhengHei", system-ui, sans-serif;
+      --serif: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: var(--font-main);
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: var(--paper); color: var(--ink); font-family: var(--font); min-height: 100dvh; }
     body {
-      background: linear-gradient(135deg, #f0f4ff 0%, #fdf2f8 100%);
-      color: var(--gray-800);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px 14px;
+      background:
+        radial-gradient(1200px 480px at 10% -10%, color-mix(in oklab, var(--teal) 8%, transparent), transparent 60%),
+        var(--paper);
+      padding: 20px 14px 32px;
     }
-
-    .container {
-      width: 100%;
-      max-width: 720px;
-      background: white;
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow);
-      padding: 26px 24px;
-      margin-bottom: 20px;
-      position: relative;
+    button, [role="button"] { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: .5; }
+    .wrap { width: 100%; max-width: 720px; margin: 0 auto; }
+    header { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 22px; }
+    .logo {
+      width: 44px; height: 44px; border-radius: 14px; background: var(--teal); color: var(--paper-raised);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
-
-    header {
-      text-align: center;
-      margin-bottom: 22px;
+    h1 { font-family: var(--serif); font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+    .subtitle { font-size: 13px; color: var(--ink-muted); margin-top: 4px; }
+    .card {
+      background: var(--paper-raised); border: 1px solid var(--rule); border-radius: 24px;
+      padding: 22px 20px; box-shadow: 0 10px 24px -16px rgba(28,25,23,.25);
     }
-
-    .app-title {
-      font-size: 26px;
-      font-weight: 800;
-      color: var(--primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
+    .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--paper); padding: 4px; border-radius: 14px; }
+    .seg-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .seg button {
+      height: 44px; border: 0; background: transparent; color: var(--ink-muted); font-weight: 700; font-size: 14px;
+      border-radius: 10px; font-family: inherit;
     }
-
-    .app-subtitle {
-      font-size: 14px;
-      color: var(--gray-600);
-      margin-top: 6px;
-    }
-
-    /* Tabs */
-    .tabs {
-      display: flex;
-      background: var(--gray-100);
-      padding: 5px;
-      border-radius: var(--radius-md);
-      margin-bottom: 20px;
-      gap: 6px;
-    }
-
-    .tab-btn {
-      flex: 1;
-      border: none;
-      padding: 12px 14px;
-      font-size: 15px;
-      font-weight: 700;
-      border-radius: 8px;
-      cursor: pointer;
-      background: transparent;
-      color: var(--gray-600);
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-
-    .tab-btn.active {
-      background: white;
-      color: var(--primary);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-    }
-
-    /* Form Elements */
-    .form-group {
-      margin-bottom: 18px;
-    }
-
-    label {
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--gray-800);
-      margin-bottom: 8px;
-    }
-
-    .badge-recommend {
-      background: #fef08a;
-      color: #854d0e;
-      font-size: 11px;
-      padding: 2px 7px;
-      border-radius: 6px;
-      margin-left: 6px;
-      font-weight: bold;
-    }
-
+    .seg button.active { background: var(--paper-raised); color: var(--teal); box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+    .kind-btn.active { background: var(--teal-soft); color: var(--teal); border: 1px solid var(--teal); }
+    .kind-btn { border: 1px solid var(--rule) !important; background: var(--paper) !important; color: var(--ink-muted) !important; }
+    .kind-btn.active { background: var(--teal-soft) !important; color: var(--teal) !important; border-color: var(--teal) !important; }
+    label, .label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+    .hint { font-size: 12px; color: var(--ink-subtle); margin-top: 8px; line-height: 1.5; }
     textarea, select, input[type="text"] {
-      width: 100%;
-      border: 2px solid var(--gray-200);
-      border-radius: var(--radius-md);
-      padding: 12px 14px;
-      font-size: 15px;
-      outline: none;
-      transition: border-color 0.2s;
+      width: 100%; border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px;
+      font-size: 16px; background: var(--paper-raised); color: var(--ink); outline: none; font-family: inherit;
     }
-
-    textarea:focus, select:focus, input[type="text"]:focus {
-      border-color: var(--primary);
+    textarea { min-height: 150px; resize: vertical; line-height: 1.7; font-family: var(--serif); }
+    textarea:focus, select:focus, input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px color-mix(in oklab, var(--teal) 20%, transparent); }
+    .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+    .muted { font-size: 12px; color: var(--ink-muted); font-weight: 600; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .chip {
+      height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--rule); background: var(--paper);
+      font-size: 12px; font-weight: 700; color: var(--ink-muted); font-family: inherit;
     }
-
-    textarea {
-      min-height: 130px;
-      resize: vertical;
-      line-height: 1.6;
+    .chip:hover { border-color: var(--teal); color: var(--teal); }
+    .chip.danger { color: var(--seal); }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
+    @media (max-width: 580px) { .grid { grid-template-columns: 1fr; } h1 { font-size: 22px; } }
+    .engine {
+      margin-top: 16px; border: 1px solid var(--rule); background: var(--paper); border-radius: 12px; padding: 12px 14px; font-size: 13px; color: var(--ink-muted);
     }
-
-    .quick-presets {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 8px;
+    .engine.warn { border-color: color-mix(in oklab, var(--seal) 35%, var(--rule)); background: var(--seal-soft); color: var(--seal); }
+    .engine strong { color: var(--ink); display: block; margin-bottom: 2px; }
+    .actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+    .btn {
+      height: 48px; border: 0; border-radius: 12px; font-size: 15px; font-weight: 700; font-family: inherit;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 16px;
     }
-
-    .preset-btn {
-      background: var(--gray-100);
-      border: 1px solid var(--gray-200);
-      color: var(--gray-800);
-      border-radius: 8px;
-      padding: 6px 12px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
+    .btn-main { background: var(--teal); color: var(--paper-raised); flex: 2; min-width: 180px; }
+    .btn-main:hover { background: var(--teal-hover); }
+    .btn-sec { background: var(--paper-raised); color: var(--ink); border: 1px solid var(--rule); flex: 1; }
+    .btn-ghost { background: transparent; color: var(--ink-muted); border: 0; height: 40px; }
+    .btn-seal { background: var(--seal); color: #fff; }
+    .tip { margin-top: 16px; border-left: 3px solid var(--teal); padding-left: 12px; font-size: 12px; color: var(--ink-muted); line-height: 1.6; }
+    .hidden { display: none !important; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; }
+    .progress { height: 8px; background: var(--paper); border-radius: 999px; overflow: hidden; margin: 14px 0 18px; }
+    .progress > div { height: 100%; background: var(--teal); width: 0; transition: width .25s cubic-bezier(.22,1,.36,1); }
+    .stage {
+      border: 1px dashed color-mix(in oklab, var(--teal) 35%, var(--rule)); background: var(--teal-soft);
+      border-radius: 20px; padding: 36px 16px; text-align: center;
     }
-
-    .preset-btn:hover {
-      background: var(--primary-light);
-      color: var(--primary);
-      border-color: var(--primary);
-    }
-
-    .settings-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-bottom: 20px;
-    }
-
-    @media (max-width: 580px) {
-      .settings-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .btn-main {
-      width: 100%;
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 16px 20px;
-      font-size: 18px;
-      font-weight: 800;
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .btn-main:hover {
-      background: var(--primary-hover);
-      transform: translateY(-1px);
-    }
-
-    .btn-secondary {
-      background: var(--gray-100);
-      color: var(--gray-800);
-      border: 1px solid var(--gray-200);
-      padding: 10px 16px;
-      border-radius: var(--radius-md);
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-secondary:hover {
-      background: var(--gray-200);
-    }
-
-    /* Runner View */
-    .runner-view, .review-view {
-      display: none;
-    }
-
-    .runner-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-
-    .progress-track {
-      width: 100%;
-      height: 10px;
-      background: var(--gray-100);
-      border-radius: 6px;
-      overflow: hidden;
-      margin-bottom: 22px;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--primary), #ec4899);
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-
-    .card-display {
-      background: var(--primary-light);
-      border: 2px dashed #c7d2fe;
-      border-radius: var(--radius-lg);
-      padding: 36px 20px;
-      text-align: center;
-      margin-bottom: 24px;
-      position: relative;
-    }
-
-    .status-badge {
-      display: inline-block;
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 14px;
-    }
-
-    .status-speaking {
-      background: #e0e7ff;
-      color: var(--primary);
-      animation: pulse 1.5s infinite;
-    }
-
-    .status-waiting {
-      background: var(--warning-light);
-      color: #b45309;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.85; transform: scale(1.02); }
-    }
-
-    .big-question-number {
-      font-size: 50px;
-      font-weight: 900;
-      color: var(--gray-800);
-      margin-bottom: 12px;
-    }
-
-    .countdown-circle {
-      font-size: 38px;
-      font-weight: 800;
-      color: #b45309;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      margin-top: 10px;
-    }
-
-    .runner-controls {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
-    .control-btn {
-      padding: 12px 20px;
-      border-radius: var(--radius-md);
-      font-size: 15px;
-      font-weight: 700;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.15s;
-    }
-
-    .btn-replay { background: #e0e7ff; color: var(--primary); }
-    .btn-replay:hover { background: #c7d2fe; }
-
-    .btn-pause { background: var(--warning-light); color: #b45309; border: 1px solid #fde68a; }
-    .btn-pause:hover { background: #fef3c7; }
-
-    .btn-skip { background: var(--gray-100); color: var(--gray-800); }
-    .btn-skip:hover { background: var(--gray-200); }
-
-    .tip-box {
-      background: #f8fafc;
-      border-left: 4px solid var(--primary);
-      padding: 12px 16px;
-      border-radius: 6px;
-      font-size: 13px;
-      color: var(--gray-600);
-      margin-top: 16px;
-      line-height: 1.5;
-    }
-
-    /* Review View */
-    .review-header {
-      text-align: center;
-      margin-bottom: 22px;
-    }
-
-    .review-title {
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--success);
-      margin-bottom: 6px;
-    }
-
-    .question-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 24px;
-      max-height: 480px;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-
-    .review-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 16px;
-      background: var(--gray-50);
-      border: 1.5px solid var(--gray-200);
-      border-radius: var(--radius-md);
-      transition: all 0.15s;
-    }
-
-    .review-item.wrong {
-      background: var(--danger-light);
-      border-color: #fca5a5;
-    }
-
-    .review-item.correct {
-      background: var(--success-light);
-      border-color: #86efac;
-    }
-
-    .item-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    .item-idx {
-      font-size: 14px;
-      color: var(--gray-600);
-      background: white;
-      padding: 4px 8px;
-      border-radius: 6px;
-      border: 1px solid var(--gray-200);
-    }
-
-    .item-play-btn {
-      background: none;
-      border: none;
-      font-size: 18px;
-      cursor: pointer;
-      color: var(--primary);
-    }
-
-    .judge-btns {
-      display: flex;
-      gap: 8px;
-    }
-
-    .judge-btn {
-      padding: 8px 14px;
-      font-size: 13px;
-      font-weight: 700;
-      border-radius: 8px;
-      border: 1.5px solid transparent;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .btn-mark-right {
-      background: white;
-      color: var(--success);
-      border-color: var(--success);
-    }
-
-    .btn-mark-right.selected {
-      background: var(--success);
-      color: white;
-    }
-
-    .btn-mark-wrong {
-      background: white;
-      color: var(--danger);
-      border-color: var(--danger);
-    }
-
-    .btn-mark-wrong.selected {
-      background: var(--danger);
-      color: white;
-    }
-
-    .review-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .typing-box {
-      margin-top: 14px;
-      text-align: center;
-    }
-
-    .typing-input {
-      font-size: 22px;
-      text-align: center;
-      padding: 14px;
-      max-width: 360px;
-      margin: 0 auto 12px auto;
-      display: block;
-    }
-
-    .feedback-text {
-      font-size: 16px;
-      font-weight: 700;
-      height: 24px;
-      margin-bottom: 12px;
-    }
-
-    footer {
-      font-size: 12px;
-      color: var(--gray-600);
-      text-align: center;
-      margin-top: auto;
-    }
+    .badge { display: inline-block; padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; background: var(--paper-raised); color: var(--teal); }
+    .badge.wait { color: var(--ink-muted); }
+    .badge.pause { color: var(--seal); background: var(--seal-soft); }
+    .q-label { font-family: var(--serif); font-size: 34px; font-weight: 700; margin: 16px 0 8px; }
+    .count { font-family: var(--serif); font-size: 32px; font-weight: 700; margin-top: 12px; }
+    .controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; }
+    .review-title { font-family: var(--serif); font-size: 24px; color: var(--ok); }
+    .list { margin: 16px 0; max-height: 480px; overflow: auto; display: flex; flex-direction: column; gap: 8px; }
+    .item { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 12px 14px; border: 1px solid var(--rule); background: var(--paper); border-radius: 14px; flex-wrap: wrap; }
+    .item.wrong { background: var(--seal-soft); border-color: color-mix(in oklab, var(--seal) 40%, var(--rule)); }
+    .item.right { background: var(--ok-soft); border-color: color-mix(in oklab, var(--ok) 30%, var(--rule)); }
+    .item-text { font-family: var(--serif); font-size: 18px; font-weight: 700; }
+    .item-idx { font-size: 12px; border: 1px solid var(--rule); background: var(--paper-raised); padding: 2px 8px; border-radius: 6px; color: var(--ink-muted); margin-right: 8px; }
+    .judge { display: flex; gap: 6px; }
+    .judge button { height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--rule); background: var(--paper-raised); font-weight: 700; font-size: 13px; font-family: inherit; }
+    .judge button.sel-ok { background: var(--ok); color: #fff; border-color: var(--ok); }
+    .judge button.sel-no { background: var(--seal); color: #fff; border-color: var(--seal); }
+    .play-mini { width: 44px; height: 44px; border: 0; background: transparent; color: var(--teal); border-radius: 10px; }
+    footer { text-align: center; font-size: 12px; color: var(--ink-subtle); margin-top: 22px; }
+    .checkline { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 14px; }
+    input.typing { font-family: var(--serif); font-size: 22px; text-align: center; max-width: 360px; margin: 14px auto 8px; display: block; height: 52px; }
+    @keyframes pulse { 50% { opacity: .65; } }
+    .pulse { animation: pulse 1.4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } * { transition: none !important; } }
   </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
+<div class="wrap">
+  <header>
+    <div class="logo" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    </div>
+    <div>
+      <h1>自主默書小助手</h1>
+      <p class="subtitle">功課班自行聽寫對卷 · 香港粵語報讀 · 詞語 / 句子 / 篇章</p>
+    </div>
+  </header>
 
-  <div class="container">
-    <header>
-      <div class="app-title">
-        <span>🎒</span> 自主默書小助手
+  <section class="card" id="setupView">
+    <div class="seg" role="tablist">
+      <button type="button" class="active" id="tabPaper" onclick="switchMode('paper')">紙筆實戰</button>
+      <button type="button" id="tabTyping" onclick="switchMode('typing')">螢幕打字</button>
+    </div>
+
+    <div style="margin-top:20px">
+      <span class="label">默書範圍</span>
+      <div class="seg seg-3">
+        <button type="button" class="kind-btn active" id="kind-words" onclick="setKind('words')">詞語</button>
+        <button type="button" class="kind-btn" id="kind-sentences" onclick="setKind('sentences')">句子</button>
+        <button type="button" class="kind-btn" id="kind-passage" onclick="setKind('passage')">篇章</button>
       </div>
-      <div class="app-subtitle">功課班溫習神器 ‧ 學生免導師陪伴 ‧ 自行聽寫及對卷</div>
-    </header>
+      <p class="hint" id="kindHint">生字、詞彙、成語。一行一個，或用逗號分隔。</p>
+    </div>
 
-    <!-- 主設定畫面 -->
-    <div id="setupView">
-      <div class="tabs">
-        <button class="tab-btn active" id="tabPaper" onclick="switchMode('paper')">
-          📝 紙筆實戰模式 <span class="badge-recommend">推薦功課班</span>
-        </button>
-        <button class="tab-btn" id="tabTyping" onclick="switchMode('typing')">
-          💻 螢幕打字拼寫
-        </button>
+    <div style="margin-top:16px">
+      <div class="row">
+        <label for="dictText">默書內容</label>
+        <span class="muted" id="wordCountTip">共 0 個詞語</span>
       </div>
-
-      <div class="form-group">
-        <div style="display:flex; justify-content:space-between; align-items:baseline;">
-          <label for="dictText">默書內容範圍（一行一個詞語或句子）：</label>
-          <span style="font-size:12px; color:var(--gray-600);" id="wordCountTip">共 0 題</span>
-        </div>
-        <textarea id="dictText" placeholder="請在此貼上或輸入默書內容，例如：
-春天
-美麗
-溫暖
-百花齊放
-或者英文：
-teacher
-student
-homework" oninput="updateWordCount()"></textarea>
-
-        <div class="quick-presets">
-          <span style="font-size:12px; color:var(--gray-600); align-self:center;">快速範例：</span>
-          <button class="preset-btn" onclick="loadPreset('chinese_words')">小學中文生字</button>
-          <button class="preset-btn" onclick="loadPreset('chinese_idioms')">中文成語短句</button>
-          <button class="preset-btn" onclick="loadPreset('english_spelling')">英文常考生字</button>
-          <button class="preset-btn" onclick="loadPreset('english_sentences')">英文默寫句子</button>
-          <button class="preset-btn" onclick="clearDictText()" style="color:var(--danger); border-color:#fecaca;">清空</button>
-        </div>
-      </div>
-
-      <div class="settings-grid">
-        <div class="form-group">
-          <label for="langSelect">🗣️ 報讀語言與口音：</label>
-          <select id="langSelect">
-            <option value="cantonese" selected>廣東話 / 粵語 (香港小學推薦)</option>
-            <option value="mandarin">普通話 / 國語</option>
-            <option value="english_uk">英國英語 (UK English)</option>
-            <option value="english_us">美國英語 (US English)</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="speedSelect">⚡ 報讀語速：</label>
-          <select id="speedSelect">
-            <option value="0.75">稍慢 (初小 / 生字溫習)</option>
-            <option value="0.85" selected>標準默書語速 (推薦)</option>
-            <option value="1.0">正常說話速度</option>
-          </select>
-        </div>
-
-        <div class="form-group" id="repeatGroup">
-          <label for="repeatSelect">🔁 每題重複報讀次數：</label>
-          <select id="repeatSelect">
-            <option value="1">讀 1 次</option>
-            <option value="2" selected>讀 2 次 (標準默書)</option>
-            <option value="3">讀 3 次 (加強記憶)</option>
-          </select>
-        </div>
-
-        <div class="form-group" id="intervalGroup">
-          <label for="intervalSelect">⏳ 寫字等待時間 (每題間隔)：</label>
-          <select id="intervalSelect">
-            <option value="5">5 秒 (短字詞 / 快速)</option>
-            <option value="8" selected>8 秒 (適中推薦)</option>
-            <option value="12">12 秒 (句子或長詞語)</option>
-            <option value="16">16 秒 (整句書寫)</option>
-            <option value="20">20 秒 (初小慢寫)</option>
-          </select>
-        </div>
-      </div>
-
-      <div style="display:flex; gap:10px; margin-bottom:12px;">
-        <button class="btn-secondary" onclick="testVoice()" style="flex:1;">🔊 試聽發音效果</button>
-      </div>
-
-      <button class="btn-main" onclick="startDictation()">
-        <span>🚀</span> 開始自主溫習默書
-      </button>
-
-      <div class="tip-box" id="modeNotice">
-        💡 <strong>紙筆實戰模式操作指南：</strong><br>
-        學生只需準備好默書簿和筆，點擊「開始」後，系統會自動如同導師般依次報讀題目與倒數計時。完成後將顯示完整答案，學生使用紅筆逐題對卷自查，針對錯題可一鍵重溫！
+      <textarea id="dictText" placeholder="請貼上詞語，一行一個" oninput="persistAndCount()"></textarea>
+      <div class="chips">
+        <button class="chip" onclick="loadPreset('cn-words')">小學中文生字</button>
+        <button class="chip" onclick="loadPreset('cn-idioms')">中文詞語成語</button>
+        <button class="chip" onclick="loadPreset('cn-sentences')">中文句子</button>
+        <button class="chip" onclick="loadPreset('cn-passage')">小學短文</button>
+        <button class="chip" onclick="loadPreset('en-words')">英文常考生字</button>
+        <button class="chip" onclick="loadPreset('en-sentences')">英文句子</button>
+        <button class="chip" onclick="loadPreset('en-passage')">英文短文</button>
+        <button class="chip danger" onclick="clearText()">清空</button>
       </div>
     </div>
 
-    <!-- 報讀進行中畫面 -->
-    <div id="runnerView" class="runner-view">
-      <div class="runner-header">
-        <button class="btn-secondary" onclick="quitRunner()">⬅️ 結束並返回</button>
-        <span id="progressText" style="font-weight:700; font-size:15px; color:var(--primary);">第 1 題 / 共 10 題</span>
+    <div class="grid">
+      <div>
+        <label for="langSelect">報讀語言</label>
+        <select id="langSelect" onchange="persistAndCount(); refreshEngine()">
+          <option value="cantonese" selected>廣東話 / 粵語（香港）</option>
+          <option value="mandarin">普通話 / 國語</option>
+          <option value="english_uk">英國英語</option>
+          <option value="english_us">美國英語</option>
+        </select>
       </div>
-
-      <div class="progress-track">
-        <div class="progress-fill" id="progressFill"></div>
+      <div>
+        <label for="speedSelect">語速</label>
+        <select id="speedSelect">
+          <option value="0.7">稍慢（初小／生字）</option>
+          <option value="0.85" selected>標準默書語速</option>
+          <option value="1">正常說話速度</option>
+        </select>
       </div>
-
-      <div class="card-display">
-        <div id="statusBadge" class="status-badge status-speaking">
-          📢 正在朗讀中...
-        </div>
-
-        <div class="big-question-number" id="qNumberDisplay">第 1 題</div>
-
-        <div id="paperCountdownArea">
-          <div class="countdown-circle">
-            <span style="font-size:22px;">⏳</span> 
-            <span id="countdownSecs">8</span> 
-            <span style="font-size:16px; font-weight:normal; color:var(--gray-600);">秒寫字時間</span>
-          </div>
-          <p style="font-size:14px; color:var(--gray-600); margin-top:8px;">請在紙上寫下答案...</p>
-        </div>
-
-        <div id="typingArea" class="typing-box" style="display:none;">
-          <input type="text" id="typeAnswerInput" class="typing-input" placeholder="在此輸入答案..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="handleTypingKey(event)">
-          <div id="typingFeedback" class="feedback-text"></div>
-          <button class="btn-main" style="max-width:240px; margin:0 auto; padding:10px 18px; font-size:15px;" onclick="checkTypingAnswer()">確定 (Enter)</button>
-        </div>
+      <div>
+        <label for="repeatSelect">每題重複</label>
+        <select id="repeatSelect">
+          <option value="1">讀 1 次</option>
+          <option value="2" selected>讀 2 次（標準）</option>
+          <option value="3">讀 3 次</option>
+        </select>
       </div>
-
-      <div class="runner-controls">
-        <button class="control-btn btn-replay" onclick="manualReplay()">
-          🔊 重聽本題
-        </button>
-        <button class="control-btn btn-pause" id="pauseBtn" onclick="togglePause()">
-          ⏸️ 暫停
-        </button>
-        <button class="control-btn btn-skip" onclick="skipToNext()">
-          ⏭️ 下一題
-        </button>
+      <div id="intervalGroup">
+        <label for="intervalSelect">寫字時間</label>
+        <select id="intervalSelect">
+          <option value="auto" selected>按題目長短自動</option>
+          <option value="5">5 秒</option>
+          <option value="8">8 秒</option>
+          <option value="12">12 秒</option>
+          <option value="16">16 秒</option>
+          <option value="20">20 秒</option>
+          <option value="28">28 秒</option>
+          <option value="40">40 秒</option>
+        </select>
       </div>
-
-      <div style="text-align:center; margin-top:12px;">
-        <button class="btn-secondary" style="font-size:13px; color:var(--danger);" onclick="finishDictationEarly()">
-          🏁 提前結束，直接看答案
-        </button>
+      <div>
+        <label for="engineSelect">語音引擎</label>
+        <select id="engineSelect" onchange="refreshEngine()">
+          <option value="auto" selected>自動（粵語優先雲端）</option>
+          <option value="cloud">強制雲端香港粵語</option>
+          <option value="system">本機語音</option>
+        </select>
       </div>
-    </div>
-
-    <!-- 自查核對與錯題溫習畫面 -->
-    <div id="reviewView" class="review-view">
-      <div class="review-header">
-        <div class="review-title">🎉 默書完成！請拿出紅筆對卷</div>
-        <p style="font-size:14px; color:var(--gray-600);">對照下方正確答案，在您的默書簿上打勾或圈出寫錯的字：</p>
-      </div>
-
-      <div class="question-list" id="reviewList"></div>
-
-      <div class="review-actions">
-        <button class="btn-main" id="retryWrongBtn" style="background:#dc2626; flex:1;" onclick="retryWrongQuestions()">
-          🔁 重新溫習錯題 (<span id="wrongCountSpan">0</span> 題)
-        </button>
-        <button class="btn-secondary" style="flex:1;" onclick="restartAll()">
-          🔄 整份重新默一次
-        </button>
-        <button class="btn-secondary" style="flex:1;" onclick="backToHome()">
-          🏠 返回主選單
-        </button>
+      <div id="charHintWrap">
+        <label class="checkline" style="margin-top:28px">
+          <input type="checkbox" id="charHint" checked>
+          詞語先逐字、再讀整詞
+        </label>
       </div>
     </div>
-  </div>
 
-  <footer>
-    自主默書小助手 ‧ 專為功課班自主學習設計 ‧ 支援廣東話/普通話/英文發音
-  </footer>
+    <div class="engine" id="engineBox">
+      <strong id="engineLabel">雲端香港粵語</strong>
+      <span id="engineDetail">Google 粵語（yue）· 書面語字音，唔會讀成普通話</span>
+    </div>
+    <p class="hint" id="testStatus"></p>
 
-  <script>
-    let currentMode = 'paper';
-    let questions = [];
-    let currentIndex = 0;
-    let isRunning = false;
-    let isPaused = false;
-    let wrongIndices = new Set();
+    <div class="actions">
+      <button class="btn btn-sec" onclick="testVoice()">試聽發音</button>
+      <button class="btn btn-main" onclick="startDictation()">開始自主默書</button>
+    </div>
+    <p class="tip" id="modeNotice">紙筆模式：準備默書簿。系統會先報題號再報讀。詞語可逐字提示；篇章會先全文導讀，再逐句默寫。完成後用紅筆對卷。</p>
+  </section>
 
-    // 內建 Web Audio 提示音（無外部檔案依賴）
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playBeep(freq = 600, duration = 0.15, type = 'sine') {
-      try {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
-      } catch (e) {
-        console.warn("Audio error", e);
-      }
+  <section class="card hidden" id="runnerView">
+    <div class="topbar">
+      <button class="btn btn-ghost" onclick="quitRunner()">結束並返回</button>
+      <span class="muted" id="progressText">1 / 10</span>
+    </div>
+    <div class="progress"><div id="progressFill"></div></div>
+    <div class="stage">
+      <span class="badge pulse" id="statusBadge">正在報讀</span>
+      <div class="q-label" id="qNumberDisplay">第 1 題</div>
+      <p class="hint" id="preludeNote"></p>
+      <div id="paperCountdownArea">
+        <div class="count"><span id="countdownSecs">—</span></div>
+        <p class="hint">秒寫字時間 · 請在紙上寫下答案</p>
+      </div>
+      <div id="typingArea" class="hidden">
+        <input type="text" id="typeAnswerInput" class="typing" placeholder="在此輸入答案" autocomplete="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter')checkTypingAnswer()">
+        <p id="typingFeedback" class="hint" style="min-height:20px;font-weight:700"></p>
+        <button class="btn btn-main" style="max-width:220px;margin:8px auto 0" onclick="checkTypingAnswer()">確定</button>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn btn-sec" onclick="manualReplay()">重聽本題</button>
+      <button class="btn btn-sec" id="pauseBtn" onclick="togglePause()">暫停</button>
+      <button class="btn btn-sec" onclick="skipToNext()">下一題</button>
+    </div>
+    <p style="text-align:center;margin-top:14px">
+      <button class="btn btn-ghost" style="color:var(--seal)" onclick="finishDictationEarly()">提前結束，直接看答案</button>
+    </p>
+  </section>
+
+  <section class="card hidden" id="reviewView">
+    <h2 class="review-title">默書完成，請拿出紅筆對卷</h2>
+    <p class="hint">對照答案，圈出寫錯的字，並標記對錯以便重溫。</p>
+    <div class="list" id="reviewList"></div>
+    <div class="actions">
+      <button class="btn btn-seal" id="retryWrongBtn" onclick="retryWrongQuestions()">重溫錯題（<span id="wrongCountSpan">0</span>）</button>
+      <button class="btn btn-sec" onclick="restartAll()">整份再默一次</button>
+      <button class="btn btn-sec" onclick="backToHome()">返回主選單</button>
+    </div>
+  </section>
+
+  <footer>專為功課班自主學習設計 · 粵語報讀唔會誤用普通話</footer>
+</div>
+
+<script>
+const PRESETS = {
+  "cn-words": { kind: "words", lang: "cantonese", text: "春天\\n學校\\n美麗\\n同學\\n認真\\n禮貌\\n健康\\n快樂\\n溫暖\\n陽光\\n老師\\n功課" },
+  "cn-idioms": { kind: "words", lang: "cantonese", text: "百花齊放\\n欣欣向榮\\n專心致志\\n齊心協力\\n知錯能改\\n守望相助\\n勤有功\\n戲無益" },
+  "cn-sentences": { kind: "sentences", lang: "cantonese", text: "春天來了，天氣漸漸暖和。\\n同學們在校園裏快樂地玩耍。\\n我們應該養成良好的閱讀習慣。\\n老師教導我們要誠實有禮。\\n做完功課以後，我喜歡到公園散步。" },
+  "cn-passage": { kind: "passage", lang: "cantonese", text: "春天來了，小草從泥土裏探出頭來。樹上的葉子慢慢地長出來，花兒也張開了笑臉。\\n\\n小鳥在枝頭上快樂地唱歌，同學們在校園裏跑步、遊戲。這個春天，充滿了生氣和歡樂。" },
+  "en-words": { kind: "words", lang: "english_uk", text: "pencil\\nteacher\\nschool\\nlibrary\\nfriend\\nsubject\\nlisten\\npractice\\nbeautiful\\ncarefully" },
+  "en-sentences": { kind: "sentences", lang: "english_uk", text: "Good morning, teacher.\\nI like reading storybooks.\\nWe should keep the classroom clean.\\nMy friends play football after school." },
+  "en-passage": { kind: "passage", lang: "english_uk", text: "Today is a sunny day. The children are playing in the playground. Some boys are playing football, and some girls are skipping. Everyone is happy.\\n\\nAfter playtime, we go back to the classroom. Our teacher reads us a story. We listen carefully and smile." }
+};
+Object.keys(PRESETS).forEach((k) => { PRESETS[k].text = PRESETS[k].text.replaceAll("\\n", "\n"); });
+
+const KIND_COPY = {
+  words: { hint: "生字、詞彙、成語。一行一個，或用逗號分隔。", ph: "請貼上詞語，一行一個，例如：\\n春天\\n美麗\\n百花齊放" },
+  sentences: { hint: "完整句子。一行一句，系統按句號自動分題。", ph: "請貼上句子，一行一句。" },
+  passage: { hint: "短文默寫。先全文導讀，再逐句報讀。空一行可分開多篇。", ph: "請貼上短文。空一行可分開多篇。" }
+};
+Object.keys(KIND_COPY).forEach((k) => { KIND_COPY[k].ph = KIND_COPY[k].ph.replaceAll("\\n", "\n"); });
+
+const DIGITS = ["零","一","二","三","四","五","六","七","八","九"];
+function chineseNumeral(n) {
+  n = Math.floor(Math.abs(n));
+  if (n < 10) return DIGITS[n];
+  if (n === 10) return "十";
+  if (n < 20) return "十" + DIGITS[n % 10];
+  if (n < 100) return DIGITS[Math.floor(n/10)] + "十" + (n % 10 ? DIGITS[n % 10] : "");
+  return String(n);
+}
+function isEn(lang) { return lang === "english_uk" || lang === "english_us"; }
+function qAnn(n, lang) { return isEn(lang) ? ("Question " + n + ".") : ("第" + chineseNumeral(n) + "題。"); }
+function sAnn(n, lang) { return isEn(lang) ? ("Sentence " + n + ".") : ("第" + chineseNumeral(n) + "句。"); }
+function pAnn(n, lang) { return isEn(lang) ? ("Passage " + n + ".") : ("第" + chineseNumeral(n) + "篇。"); }
+function passageIntro(lang) {
+  if (isEn(lang)) return "Please listen to the whole passage first. Do not write yet.";
+  if (lang === "mandarin") return "現在先聽一次全文，暫時不用寫。";
+  return "而家先聽一次全文，暫時唔使寫。";
+}
+function passageBegin(lang) {
+  if (isEn(lang)) return "Now write sentence by sentence.";
+  if (lang === "mandarin") return "開始逐句默寫。";
+  return "而家開始逐句默書。";
+}
+function readyPrompt(lang) {
+  if (isEn(lang)) return "Are you ready? We will begin dictation.";
+  if (lang === "mandarin") return "準備好了嗎？我們開始默寫。";
+  return "準備好未？我哋而家開始默書。";
+}
+function testSample(lang) {
+  if (lang === "cantonese") return "春天來了，同學們在校園裏認真溫習。呢個係香港粵語默書報讀。";
+  if (lang === "mandarin") return "春天來了，同學們在校園裏認真溫習。這是普通話默寫報讀。";
+  return "Good morning. This is a dictation voice test.";
+}
+function wordHint(text) {
+  const chars = [...text].filter((ch) => /\p{Script=Han}/u.test(ch));
+  if (chars.length >= 2 && chars.length <= 8 && chars.join("") === text.replace(/\s+/g, "")) {
+    return chars.join("、") + "。" + text + "。";
+  }
+  return /[。．.！？!?]$/.test(text) ? text : text + "。";
+}
+
+function splitSentences(text) {
+  const src = text.replace(/\r\n/g, "\n").trim();
+  if (!src) return [];
+  const parts = [];
+  let buf = "";
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    if (ch === "\n") continue;
+    buf += ch;
+    const next = src[i + 1] || "";
+    if (/[。！？!?…]/.test(ch) || (ch === "." && (next === "" || /\s/.test(next)))) {
+      const t = buf.trim();
+      if (t) parts.push(t);
+      buf = "";
     }
-
-    // Web Speech API 語音模組
-    let synth = window.speechSynthesis;
-    let availableVoices = [];
-
-    function populateVoices() {
-      if (!synth) return;
-      availableVoices = synth.getVoices();
+  }
+  if (buf.trim()) parts.push(buf.trim());
+  return parts;
+}
+function parseItems(text, kind) {
+  const raw = text.replace(/\r\n/g, "\n").trim();
+  if (!raw) return { items: [], label: kind === "words" ? "共 0 個詞語" : kind === "sentences" ? "共 0 句" : "共 0 篇" };
+  if (kind === "words") {
+    const words = raw.split(/[\n,，、;；]+/).map((s) => s.trim()).filter(Boolean);
+    return { items: words.map((t) => ({ kind: "word", text: t })), label: "共 " + words.length + " 個詞語" };
+  }
+  if (kind === "sentences") {
+    const sentences = [];
+    for (const line of raw.split("\n")) {
+      const t = line.trim();
+      if (!t) continue;
+      const sub = splitSentences(t);
+      if (sub.length > 1) sentences.push(...sub); else sentences.push(t);
     }
-    populateVoices();
-    if (synth && synth.onvoiceschanged !== undefined) {
-      synth.onvoiceschanged = populateVoices;
+    return { items: sentences.map((t) => ({ kind: "sentence", text: t })), label: "共 " + sentences.length + " 句" };
+  }
+  const blocks = raw.split(/\n\s*\n/).map((s) => s.trim()).filter(Boolean);
+  const passages = blocks.map((block) => {
+    const compact = block.replace(/\s*\n\s*/g, "");
+    let sentences = splitSentences(compact);
+    if (sentences.length <= 1) {
+      const byLine = block.split("\n").map((s) => s.trim()).filter(Boolean);
+      if (byLine.length > 1) sentences = byLine;
+      else if (!sentences.length) sentences = [compact];
     }
-
-    function getSelectedVoice(langCode) {
-      if (availableVoices.length === 0) availableVoices = synth.getVoices();
-      const matchRules = {
-        'cantonese': ['zh-HK', 'yue', 'zh-HKG', 'Chinese (Hong Kong)'],
-        'mandarin': ['zh-TW', 'zh-CN', 'cmn', 'Chinese (Taiwan)', 'Chinese (China)'],
-        'english_uk': ['en-GB', 'en-uk', 'English United Kingdom'],
-        'english_us': ['en-US', 'en-us', 'English United States']
-      };
-      const rules = matchRules[langCode] || ['zh-HK'];
-      for (const keyword of rules) {
-        const found = availableVoices.find(v => 
-          v.lang.toLowerCase().includes(keyword.toLowerCase()) || 
-          v.name.toLowerCase().includes(keyword.toLowerCase())
-        );
-        if (found) return found;
-      }
-      return null;
-    }
-
-    function speakText(text, langCode, rate = 0.85) {
-      return new Promise((resolve) => {
-        if (!synth) { resolve(); return; }
-        synth.cancel();
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        const voice = getSelectedVoice(langCode);
-        if (voice) {
-          utterance.voice = voice;
-        } else {
-          if (langCode === 'cantonese') utterance.lang = 'zh-HK';
-          else if (langCode === 'mandarin') utterance.lang = 'zh-CN';
-          else if (langCode === 'english_uk') utterance.lang = 'en-GB';
-          else utterance.lang = 'en-US';
-        }
-        utterance.rate = parseFloat(rate) || 0.85;
-        utterance.pitch = 1.0;
-        utterance.onend = () => resolve();
-        utterance.onerror = () => resolve();
-        synth.speak(utterance);
+    return { kind: "passage", full: compact, sentences };
+  });
+  const n = passages.reduce((a, p) => a + p.sentences.length, 0);
+  return { items: passages, label: "共 " + passages.length + " 篇 · " + n + " 句" };
+}
+function writingSeconds(text, kind, interval) {
+  if (interval !== "auto") return parseInt(interval, 10);
+  const chars = [...text].filter((c) => c.trim()).length;
+  const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+  if (kind === "words") return clamp(Math.ceil(chars * 1.3) + 5, 6, 16);
+  if (kind === "sentences") return clamp(Math.ceil(chars * 1.5) + 6, 10, 28);
+  return clamp(Math.ceil(chars * 1.7) + 8, 12, 36);
+}
+function buildQueue(items, lang, charHint) {
+  const units = [];
+  let q = 0, passageNo = 0;
+  for (const item of items) {
+    if (item.kind === "word") {
+      q++;
+      units.push({ text: item.text, speak: (lang === "cantonese" && charHint) ? wordHint(item.text) : item.text, announce: qAnn(q, lang), label: "第 " + q + " 題", kind: "words" });
+    } else if (item.kind === "sentence") {
+      q++;
+      units.push({ text: item.text, speak: item.text, announce: qAnn(q, lang), label: "第 " + q + " 題", kind: "sentences" });
+    } else {
+      passageNo++;
+      const group = items.length > 1 ? ("第 " + passageNo + " 篇") : "篇章";
+      item.sentences.forEach((sentence, si) => {
+        q++;
+        units.push({
+          text: sentence, speak: sentence, announce: sAnn(si + 1, lang),
+          label: group + " · 第 " + (si + 1) + " 句", kind: "passage", group,
+          prelude: si === 0 ? [pAnn(passageNo, lang), passageIntro(lang), item.full, passageBegin(lang)] : null
+        });
       });
     }
+  }
+  return units;
+}
 
-    function switchMode(mode) {
-      currentMode = mode;
-      document.getElementById('tabPaper').classList.toggle('active', mode === 'paper');
-      document.getElementById('tabTyping').classList.toggle('active', mode === 'typing');
-      const isPaper = (mode === 'paper');
-      document.getElementById('intervalGroup').style.display = isPaper ? 'block' : 'none';
-      document.getElementById('modeNotice').innerHTML = isPaper 
-        ? '💡 <strong>紙筆實戰模式操作指南：</strong><br>學生只需準備好默書簿和筆，點擊「開始」後，系統會自動如同導師般依次報讀題目與倒數計時。完成後將顯示完整答案，學生使用紅筆逐題對卷自查，針對錯題可一鍵重溫！'
-        : '💡 <strong>螢幕打字模式操作指南：</strong><br>適合高小學生練習打字拼寫或英文生字 (Spelling)。系統播放語音後，學生在輸入框打出正確拼字並按 Enter 提交核對。';
+/* -------- TTS: Google Yue for Cantonese, never Mandarin fallback -------- */
+const GOOGLE_ENDPOINTS = ["https://translate.googleapis.com/translate_tts", "https://translate.google.com/translate_tts"];
+const YUE_TLS = ["yue", "yue-HK", "zh-yue"];
+const SILENT = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+let activeAudio = null, speakGen = 0, audioUnlocked = false;
+function voices() { return window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
+function isYueVoice(v) {
+  const b = (v.lang + " " + v.name).toLowerCase();
+  if (/hiu\s*maan|hiumaan|hiu\s*gaai|hiugaai|wan\s*lung|wanlung|sinji/.test(b)) return true;
+  if (/yue|cantonese|粵語|粤语|hong kong|hongkong/.test(b)) return true;
+  if (/zh-hk|zh_hk/.test(b) && !/mandarin|putonghua|普通話|普通话/.test(b)) return true;
+  return false;
+}
+function pickVoice(lang) {
+  const list = voices();
+  if (lang === "cantonese") return list.find(isYueVoice) || null;
+  if (lang === "mandarin") return list.find((v) => /zh-tw|zh-cn|cmn|mandarin|meijia/.test((v.lang + v.name).toLowerCase()) && !isYueVoice(v)) || null;
+  const code = lang === "english_uk" ? "en-gb" : "en-us";
+  return list.find((v) => v.lang.toLowerCase().startsWith(code)) || list.find((v) => v.lang.toLowerCase().startsWith("en")) || null;
+}
+function inspectEngine(lang, pref) {
+  const native = pickVoice(lang);
+  if (lang === "cantonese") {
+    if (pref === "system" && native) return { label: "本機香港粵語", detail: native.name, source: "system" };
+    if (pref === "system" && !native) return { label: "雲端香港粵語（後備）", detail: "此裝置沒有粵語語音，不會改用普通話", source: "cloud", warn: true };
+    if (pref === "auto" && native) return { label: "本機香港粵語", detail: native.name, source: "system" };
+    return { label: "雲端香港粵語", detail: "Google 粵語（yue）· 書面語字音，唔會讀成普通話", source: "cloud" };
+  }
+  if (native) return { label: lang === "mandarin" ? "本機普通話" : "本機英語", detail: native.name, source: "system" };
+  return { label: "雲端語音", detail: lang, source: "cloud" };
+}
+function cancelSpeech() {
+  speakGen++;
+  try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
+  if (activeAudio) { try { activeAudio.pause(); activeAudio.removeAttribute("src"); activeAudio.load(); } catch (e) {} }
+}
+function chunkText(text, max) {
+  const t = text.trim();
+  if ([...t].length <= max) return [t];
+  const pieces = []; let buf = "";
+  for (const ch of t) {
+    buf += ch;
+    if ([...buf].length >= max && /[。！？!?，,、；;\s]/.test(ch)) { pieces.push(buf.trim()); buf = ""; }
+  }
+  if (buf.trim()) pieces.push(buf.trim());
+  return pieces.length ? pieces : [t];
+}
+async function unlockAudio() {
+  if (audioUnlocked) return;
+  try {
+    const a = new Audio(SILENT); a.volume = 0.01; await a.play(); a.pause();
+  } catch (e) {}
+  audioUnlocked = true;
+  try { if (audioCtx && audioCtx.state === "suspended") await audioCtx.resume(); } catch (e) {}
+}
+function playUrl(url, rate, gen) {
+  return new Promise((resolve, reject) => {
+    if (gen !== speakGen) { resolve(); return; }
+    if (!activeAudio) { activeAudio = new Audio(); activeAudio.preload = "auto"; activeAudio.referrerPolicy = "no-referrer"; }
+    const audio = activeAudio;
+    audio.pause();
+    audio.playbackRate = Math.min(1.25, Math.max(0.6, rate));
+    audio.src = url;
+    const timer = setTimeout(() => done(new Error("timeout")), 18000);
+    const done = (err) => { audio.onended = audio.onerror = null; clearTimeout(timer); err ? reject(err) : resolve(); };
+    audio.onended = () => done();
+    audio.onerror = () => done(new Error("audio"));
+    audio.play().catch((e) => done(e));
+  });
+}
+async function speakCloud(text, lang, rate, gen) {
+  const tls = lang === "cantonese" ? YUE_TLS : [lang === "mandarin" ? "zh-TW" : lang === "english_uk" ? "en-GB" : "en-US"];
+  const chunks = chunkText(text, lang.startsWith("english") ? 160 : 80);
+  for (const chunk of chunks) {
+    if (gen !== speakGen) return;
+    let ok = false, last = null;
+    outer: for (const tl of tls) {
+      for (const ep of GOOGLE_ENDPOINTS) {
+        const client = ep.includes("googleapis") ? "gtx" : "tw-ob";
+        const url = ep + "?ie=UTF-8&client=" + client + "&tl=" + tl + "&q=" + encodeURIComponent(chunk) + "&textlen=" + chunk.length;
+        try { await playUrl(url, rate, gen); ok = true; break outer; }
+        catch (e) { last = e; }
+      }
     }
+    if (!ok) throw last || new Error("cloud");
+  }
+}
+function speakSystem(text, lang, rate, gen) {
+  return new Promise((resolve) => {
+    if (!window.speechSynthesis) { resolve(); return; }
+    const synth = window.speechSynthesis;
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const voice = pickVoice(lang);
+    if (lang === "cantonese" && !voice) { resolve(); return; }
+    if (voice) u.voice = voice;
+    u.lang = voice ? voice.lang : (lang === "cantonese" ? "zh-HK" : lang === "mandarin" ? "zh-TW" : lang === "english_uk" ? "en-GB" : "en-US");
+    u.rate = Math.min(1.1, Math.max(0.55, rate));
+    u.onend = u.onerror = () => resolve();
+    synth.speak(u);
+    setTimeout(resolve, Math.max(1800, [...text].length * (420 / u.rate)) + 2000);
+  });
+}
+async function speakText(text, lang, rate, enginePref) {
+  const value = (text || "").trim();
+  if (!value) return;
+  const gen = ++speakGen;
+  const info = inspectEngine(lang, enginePref);
+  const wantCloud = info.source === "cloud" || enginePref === "cloud";
+  if (wantCloud) {
+    try { await speakCloud(value, lang, rate, gen); return; }
+    catch (e) { if (lang === "cantonese" && !pickVoice("cantonese")) throw new Error("cantonese-unavailable"); }
+  }
+  if (lang === "cantonese" && !pickVoice("cantonese")) {
+    await speakCloud(value, lang, rate, gen);
+    return;
+  }
+  await speakSystem(value, lang, rate, gen);
+}
 
-    const PRESETS = {
-      chinese_words: "春天\n學校\n美麗\n同學\n認真\n禮貌\n健康\n快樂",
-      chinese_idioms: "百花齊放\n欣欣向榮\n專心致志\n齊心協力\n知錯能改",
-      english_spelling: "pencil\nteacher\nschool\nlibrary\nfriend\nsubject\nlisten\npractice",
-      english_sentences: "Good morning, teacher.\nI like reading storybooks.\nWe should keep the classroom clean."
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playBeep(freq, dur, type) {
+  try {
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type || "sine";
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.07, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + dur);
+  } catch (e) {}
+}
+
+let currentMode = "paper";
+let currentKind = "words";
+let units = [];
+let currentIndex = 0;
+let isRunning = false;
+let isPaused = false;
+let skipFlag = false;
+let marks = [];
+
+function $(id) { return document.getElementById(id); }
+function sleep(ms) {
+  return new Promise((resolve) => {
+    const start = Date.now();
+    const tick = () => {
+      if (!isRunning) return resolve();
+      if (isPaused) return setTimeout(tick, 120);
+      if (Date.now() - start >= ms) return resolve();
+      setTimeout(tick, 80);
     };
+    tick();
+  });
+}
+function switchMode(mode) {
+  currentMode = mode;
+  $("tabPaper").classList.toggle("active", mode === "paper");
+  $("tabTyping").classList.toggle("active", mode === "typing");
+  $("intervalGroup").style.display = mode === "paper" ? "block" : "none";
+  $("modeNotice").textContent = mode === "paper"
+    ? "紙筆模式：準備默書簿。系統會先報題號再報讀。詞語可逐字提示；篇章會先全文導讀，再逐句默寫。完成後用紅筆對卷。"
+    : "打字模式：聽完後在螢幕輸入答案。適合英文拼寫或高小自查。";
+  persistAndCount();
+}
+function setKind(kind) {
+  currentKind = kind;
+  ["words","sentences","passage"].forEach((k) => $( "kind-" + k ).classList.toggle("active", k === kind));
+  $("kindHint").textContent = KIND_COPY[kind].hint;
+  $("dictText").placeholder = KIND_COPY[kind].ph;
+  $("charHintWrap").style.display = kind === "words" ? "block" : "none";
+  persistAndCount();
+}
+function persistAndCount() {
+  const parsed = parseItems($("dictText").value, currentKind);
+  $("wordCountTip").textContent = parsed.label;
+  localStorage.setItem("dictation-helper-v2", JSON.stringify({
+    text: $("dictText").value, kind: currentKind, lang: $("langSelect").value, mode: currentMode,
+    rate: $("speedSelect").value, repeats: $("repeatSelect").value, interval: $("intervalSelect").value,
+    engine: $("engineSelect").value, charHint: $("charHint").checked
+  }));
+  refreshCharHint();
+}
+function refreshCharHint() {
+  $("charHintWrap").style.display = (currentKind === "words" && $("langSelect").value === "cantonese") ? "block" : "none";
+}
+function refreshEngine() {
+  const info = inspectEngine($("langSelect").value, $("engineSelect").value);
+  $("engineLabel").textContent = info.label;
+  $("engineDetail").textContent = info.detail + ($("langSelect").value === "cantonese" ? "　粵語報讀唔會改用普通話。" : "");
+  $("engineBox").classList.toggle("warn", !!info.warn);
+  refreshCharHint();
+}
+function loadPreset(id) {
+  const p = PRESETS[id];
+  if (!p) return;
+  $("dictText").value = p.text;
+  $("langSelect").value = p.lang;
+  setKind(p.kind);
+}
+function clearText() { $("dictText").value = ""; persistAndCount(); }
 
-    function loadPreset(key) {
-      document.getElementById('dictText').value = PRESETS[key] || '';
-      updateWordCount();
-      if (key.startsWith('chinese')) {
-        document.getElementById('langSelect').value = 'cantonese';
-      } else {
-        document.getElementById('langSelect').value = 'english_uk';
+async function testVoice() {
+  $("testStatus").textContent = "正在報讀試聽…";
+  await unlockAudio();
+  const lang = $("langSelect").value;
+  try {
+    await speakText(testSample(lang), lang, parseFloat($("speedSelect").value), $("engineSelect").value);
+    $("testStatus").textContent = "試聽完成 · " + inspectEngine(lang, $("engineSelect").value).label;
+  } catch (e) {
+    $("testStatus").textContent = "粵語雲端語音未能播放。請檢查網絡，系統不會改用普通話。";
+  }
+}
+
+function show(id) {
+  ["setupView","runnerView","reviewView"].forEach((k) => $(k).classList.toggle("hidden", k !== id));
+}
+function setStatus(text, kind) {
+  const el = $("statusBadge");
+  el.textContent = text;
+  el.className = "badge" + (kind === "speak" ? " pulse" : kind === "pause" ? " pause" : " wait");
+}
+function updateProgress() {
+  $("progressFill").style.width = (units.length ? (currentIndex / units.length) * 100 : 0) + "%";
+  $("progressText").textContent = (currentIndex + 1) + " / " + units.length;
+  $("qNumberDisplay").textContent = units[currentIndex] ? units[currentIndex].label : "";
+}
+
+async function startDictation(override) {
+  const lang = $("langSelect").value;
+  const parsed = parseItems($("dictText").value, currentKind);
+  units = override || buildQueue(parsed.items, lang, $("charHint").checked);
+  if (!units.length) { $("testStatus").textContent = "請先輸入或貼上默書內容。"; return; }
+  await unlockAudio();
+  currentIndex = 0; isRunning = true; isPaused = false; skipFlag = false;
+  marks = units.map(() => "unset");
+  persistAndCount();
+  show("runnerView");
+  $("paperCountdownArea").classList.toggle("hidden", currentMode !== "paper");
+  $("typingArea").classList.toggle("hidden", currentMode !== "paper" ? false : true);
+  if (currentMode === "paper") { $("paperCountdownArea").classList.remove("hidden"); $("typingArea").classList.add("hidden"); }
+  else { $("paperCountdownArea").classList.add("hidden"); $("typingArea").classList.remove("hidden"); }
+  $("pauseBtn").textContent = "暫停";
+  try { await speakText(readyPrompt(lang), lang, parseFloat($("speedSelect").value), $("engineSelect").value); } catch (e) {}
+  if (currentMode === "paper") runPaper(); else runTyping();
+}
+
+async function runPaper() {
+  const lang = $("langSelect").value;
+  const rate = parseFloat($("speedSelect").value);
+  const engine = $("engineSelect").value;
+  const repeats = parseInt($("repeatSelect").value, 10) || 2;
+  const interval = $("intervalSelect").value;
+  while (isRunning && currentIndex < units.length) {
+    const unit = units[currentIndex];
+    skipFlag = false;
+    updateProgress();
+    $("preludeNote").textContent = "";
+    $("countdownSecs").textContent = "—";
+    if (unit.prelude && unit.prelude.length) {
+      setStatus("全文導讀", "speak");
+      $("preludeNote").textContent = "請先聽全文，暫時不用寫";
+      for (const line of unit.prelude) {
+        if (!isRunning || skipFlag) break;
+        while (isPaused && isRunning) await sleep(120);
+        try { await speakText(line, lang, rate, engine); } catch (e) {}
+        await sleep(400);
       }
+      $("preludeNote").textContent = "";
     }
-
-    function clearDictText() {
-      document.getElementById('dictText').value = '';
-      updateWordCount();
+    if (!isRunning) return;
+    playBeep(520, 0.1);
+    setStatus("正在報讀", "speak");
+    try { await speakText(unit.announce, lang, rate, engine); } catch (e) {}
+    await sleep(300);
+    for (let r = 0; r < repeats; r++) {
+      if (!isRunning || skipFlag) break;
+      while (isPaused && isRunning) await sleep(120);
+      setStatus(repeats > 1 ? ("報讀中（第 " + (r + 1) + " 次）") : "報讀中", "speak");
+      try { await speakText(unit.speak, lang, rate, engine); }
+      catch (e) { setStatus("語音未能播放，請按重聽或檢查網絡", "wait"); }
+      if (r < repeats - 1) await sleep(1100);
     }
-
-    function updateWordCount() {
-      const parsed = parseQuestions(document.getElementById('dictText').value);
-      document.getElementById('wordCountTip').innerText = `共 ${parsed.length} 題`;
-    }
-
-    function parseQuestions(text) {
-      if (!text) return [];
-      return text.split(/[\n,，、;；]+/).map(s => s.trim()).filter(s => s.length > 0);
-    }
-
-    function testVoice() {
-      const lang = document.getElementById('langSelect').value;
-      const rate = document.getElementById('speedSelect').value;
-      let sample = "這是自主默書發音測試。";
-      if (lang === 'cantonese') sample = "這裏是廣東話默書發音測試，準備好了嗎？";
-      else if (lang === 'mandarin') sample = "這裡是普通話默寫發音測試，準備好了嗎？";
-      else sample = "This is a dictation voice test. Are you ready?";
-      speakText(sample, lang, rate);
-    }
-
-    function startDictation(overrideQuestions = null) {
-      if (overrideQuestions) {
-        questions = overrideQuestions;
-      } else {
-        questions = parseQuestions(document.getElementById('dictText').value);
-      }
-
-      if (questions.length === 0) {
-        alert("請先輸入或貼上默書題目！");
-        return;
-      }
-
-      localStorage.setItem('last_dict_text', document.getElementById('dictText').value);
-      localStorage.setItem('last_dict_lang', document.getElementById('langSelect').value);
-
-      currentIndex = 0;
-      isRunning = true;
-      isPaused = false;
-      wrongIndices.clear();
-
-      document.getElementById('setupView').style.display = 'none';
-      document.getElementById('reviewView').style.display = 'none';
-      document.getElementById('runnerView').style.display = 'block';
-
-      if (currentMode === 'paper') {
-        document.getElementById('paperCountdownArea').style.display = 'block';
-        document.getElementById('typingArea').style.display = 'none';
-        runPaperStep();
-      } else {
-        document.getElementById('paperCountdownArea').style.display = 'none';
-        document.getElementById('typingArea').style.display = 'block';
-        runTypingStep();
-      }
-    }
-
-    function updateProgress() {
-      const progressPercent = ((currentIndex) / questions.length) * 100;
-      document.getElementById('progressFill').style.width = `${progressPercent}%`;
-      document.getElementById('progressText').innerText = `第 ${currentIndex + 1} 題 / 共 ${questions.length} 題`;
-      document.getElementById('qNumberDisplay').innerText = `第 ${currentIndex + 1} 題`;
-    }
-
-    async function runPaperStep() {
-      if (!isRunning) return;
-      if (currentIndex >= questions.length) {
-        finishDictation();
-        return;
-      }
-
-      updateProgress();
-      const currentWord = questions[currentIndex];
-      const repeatCount = parseInt(document.getElementById('repeatSelect').value) || 2;
-      const intervalSecs = parseInt(document.getElementById('intervalSelect').value) || 8;
-      const lang = document.getElementById('langSelect').value;
-      const rate = document.getElementById('speedSelect').value;
-
-      for (let r = 1; r <= repeatCount; r++) {
-        if (!isRunning) return;
-        while (isPaused) await sleep(200);
-
-        playBeep(520, 0.1);
-        setStatus("📢 報讀中...", "status-speaking");
-        document.getElementById('paperCountdownArea').style.opacity = '0.4';
-
-        await speakText(currentWord, lang, rate);
-        if (r < repeatCount) await sleep(1400);
-      }
-
-      setStatus("✏️ 請在紙上寫字...", "status-waiting");
-      document.getElementById('paperCountdownArea').style.opacity = '1';
-
-      for (let s = intervalSecs; s >= 1; s--) {
-        if (!isRunning) return;
-        while (isPaused) await sleep(200);
-        document.getElementById('countdownSecs').innerText = s;
+    if (isRunning && !skipFlag) {
+      const wait = writingSeconds(unit.text, unit.kind, interval);
+      setStatus("請在紙上書寫", "wait");
+      for (let s = wait; s >= 1; s--) {
+        if (!isRunning || skipFlag) break;
+        while (isPaused && isRunning) await sleep(120);
+        $("countdownSecs").textContent = s;
         if (s <= 3) playBeep(440, 0.08);
         await sleep(1000);
       }
-
-      if (isRunning) {
-        currentIndex++;
-        runPaperStep();
-      }
     }
+    currentIndex++;
+  }
+  if (isRunning) finishDictation();
+}
 
-    async function runTypingStep() {
+async function runTyping() {
+  if (!isRunning) return;
+  if (currentIndex >= units.length) { finishDictation(); return; }
+  const unit = units[currentIndex];
+  const lang = $("langSelect").value;
+  const rate = parseFloat($("speedSelect").value);
+  const engine = $("engineSelect").value;
+  updateProgress();
+  $("typeAnswerInput").value = "";
+  $("typeAnswerInput").disabled = false;
+  $("typingFeedback").textContent = "";
+  $("preludeNote").textContent = "";
+  if (unit.prelude && unit.prelude.length) {
+    setStatus("全文導讀", "speak");
+    $("preludeNote").textContent = "請先聽全文，暫時不用寫";
+    for (const line of unit.prelude) {
       if (!isRunning) return;
-      if (currentIndex >= questions.length) {
-        finishDictation();
-        return;
-      }
-
-      updateProgress();
-      const currentWord = questions[currentIndex];
-      const lang = document.getElementById('langSelect').value;
-      const rate = document.getElementById('speedSelect').value;
-
-      setStatus("🎧 請仔細聽發音並打字", "status-speaking");
-      const inputEl = document.getElementById('typeAnswerInput');
-      inputEl.value = '';
-      inputEl.disabled = false;
-      inputEl.focus();
-      document.getElementById('typingFeedback').innerText = '';
-
-      playBeep(520, 0.1);
-      await speakText(currentWord, lang, rate);
+      try { await speakText(line, lang, rate, engine); } catch (e) {}
     }
+    $("preludeNote").textContent = "";
+  }
+  playBeep(520, 0.1);
+  setStatus("請仔細聽，然後輸入", "speak");
+  try { await speakText(unit.announce, lang, rate, engine); await speakText(unit.speak, lang, rate, engine); }
+  catch (e) { setStatus("語音未能播放，請按重聽", "wait"); }
+  $("typeAnswerInput").focus();
+}
 
-    function handleTypingKey(event) {
-      if (event.key === 'Enter') checkTypingAnswer();
-    }
+async function checkTypingAnswer() {
+  const unit = units[currentIndex];
+  if (!unit) return;
+  const user = $("typeAnswerInput").value.trim();
+  const ok = user.toLowerCase() === unit.text.trim().toLowerCase();
+  marks[currentIndex] = ok ? "right" : "wrong";
+  $("typeAnswerInput").disabled = true;
+  $("typingFeedback").style.color = ok ? "var(--ok)" : "var(--seal)";
+  $("typingFeedback").textContent = ok ? "答對了" : ("正確答案：" + unit.text);
+  playBeep(ok ? 880 : 260, ok ? 0.2 : 0.3, ok ? "sine" : "triangle");
+  await sleep(1400);
+  currentIndex++;
+  runTyping();
+}
 
-    async function checkTypingAnswer() {
-      const inputEl = document.getElementById('typeAnswerInput');
-      const userInput = inputEl.value.trim();
-      const targetWord = questions[currentIndex].trim();
-      const feedbackEl = document.getElementById('typingFeedback');
+function manualReplay() {
+  const unit = units[currentIndex];
+  if (!unit) return;
+  const lang = $("langSelect").value;
+  speakText(unit.speak, lang, parseFloat($("speedSelect").value), $("engineSelect").value);
+}
+function togglePause() {
+  isPaused = !isPaused;
+  $("pauseBtn").textContent = isPaused ? "繼續" : "暫停";
+  if (isPaused) { cancelSpeech(); setStatus("已暫停", "pause"); }
+  else setStatus("繼續溫習", "wait");
+}
+function skipToNext() {
+  skipFlag = true;
+  cancelSpeech();
+  if (currentMode === "typing") { currentIndex++; runTyping(); }
+}
+function finishDictationEarly() { finishDictation(); }
+function quitRunner() {
+  if (!confirm("確定要中止當前默書並返回主選單嗎？")) return;
+  isRunning = false; cancelSpeech(); backToHome();
+}
+function finishDictation() {
+  isRunning = false; cancelSpeech(); playBeep(784, 0.25);
+  show("reviewView");
+  const list = $("reviewList");
+  list.innerHTML = "";
+  units.forEach((u, idx) => {
+    const item = document.createElement("div");
+    item.className = "item" + (marks[idx] === "wrong" ? " wrong" : marks[idx] === "right" ? " right" : "");
+    item.id = "rev_" + idx;
+    item.innerHTML = '<div><span class="item-idx">' + (idx + 1) + '</span>' +
+      (u.group ? '<div class="hint" style="color:var(--teal);font-weight:700">' + escapeHtml(u.group) + '</div>' : '') +
+      '<span class="item-text">' + escapeHtml(u.text) + '</span></div>' +
+      '<div class="judge">' +
+      '<button class="play-mini" onclick="playItem(' + idx + ')" title="重聽">▶</button>' +
+      '<button class="' + (marks[idx] === "right" ? "sel-ok" : "") + '" onclick="markResult(' + idx + ', true)">正確</button>' +
+      '<button class="' + (marks[idx] === "wrong" ? "sel-no" : "") + '" onclick="markResult(' + idx + ', false)">寫錯</button>' +
+      '</div>';
+    list.appendChild(item);
+  });
+  updateWrongCountDisplay();
+}
+function playItem(idx) {
+  const lang = $("langSelect").value;
+  speakText(units[idx].text, lang, parseFloat($("speedSelect").value), $("engineSelect").value);
+}
+function markResult(index, isCorrect) {
+  marks[index] = isCorrect ? "right" : "wrong";
+  const el = $("rev_" + index);
+  el.className = "item " + (isCorrect ? "right" : "wrong");
+  const btns = el.querySelectorAll(".judge button");
+  btns[1].className = isCorrect ? "sel-ok" : "";
+  btns[2].className = isCorrect ? "" : "sel-no";
+  updateWrongCountDisplay();
+}
+function updateWrongCountDisplay() {
+  const count = marks.filter((m) => m === "wrong").length;
+  $("wrongCountSpan").textContent = count;
+  $("retryWrongBtn").style.display = count > 0 ? "inline-flex" : "none";
+}
+function retryWrongQuestions() {
+  const wrong = units.filter((_, i) => marks[i] === "wrong");
+  if (!wrong.length) return;
+  const lang = $("langSelect").value;
+  startDictation(wrong.map((u, i) => ({ ...u, prelude: null, announce: qAnn(i + 1, lang), label: "錯題 " + (i + 1) })));
+}
+function restartAll() { startDictation(units.map((u) => ({ ...u }))); }
+function backToHome() { isRunning = false; cancelSpeech(); show("setupView"); }
+function escapeHtml(str) { return str.replace(/&/g,"&").replace(/</g,"<").replace(/>/g,">"); }
 
-      const isCorrect = (userInput.toLowerCase() === targetWord.toLowerCase());
-      inputEl.disabled = true;
-
-      if (isCorrect) {
-        playBeep(880, 0.2);
-        feedbackEl.style.color = "var(--success)";
-        feedbackEl.innerText = "🎉 答對了！太棒了！";
-      } else {
-        playBeep(260, 0.3, 'triangle');
-        feedbackEl.style.color = "var(--danger)";
-        feedbackEl.innerText = `❌ 正確答案是：${targetWord}`;
-        wrongIndices.add(currentIndex);
-      }
-
-      await sleep(1400);
-      currentIndex++;
-      runTypingStep();
-    }
-
-    function setStatus(text, className) {
-      const badge = document.getElementById('statusBadge');
-      badge.innerText = text;
-      badge.className = `status-badge ${className}`;
-    }
-
-    function manualReplay() {
-      if (currentIndex < questions.length) {
-        const lang = document.getElementById('langSelect').value;
-        const rate = document.getElementById('speedSelect').value;
-        speakText(questions[currentIndex], lang, rate);
-      }
-    }
-
-    function togglePause() {
-      isPaused = !isPaused;
-      const btn = document.getElementById('pauseBtn');
-      if (isPaused) {
-        btn.innerText = "▶️ 繼續";
-        setStatus("⏸️ 已暫停", "status-waiting");
-        synth.pause();
-      } else {
-        btn.innerText = "⏸️ 暫停";
-        setStatus("📢 繼續溫習中...", "status-speaking");
-        synth.resume();
-      }
-    }
-
-    function skipToNext() {
-      synth.cancel();
-      currentIndex++;
-      if (currentMode === 'paper') runPaperStep();
-      else runTypingStep();
-    }
-
-    function finishDictationEarly() {
-      synth.cancel();
-      finishDictation();
-    }
-
-    function quitRunner() {
-      if (confirm("確定要中止當前默書並返回主選單嗎？")) {
-        isRunning = false;
-        synth.cancel();
-        backToHome();
-      }
-    }
-
-    function finishDictation() {
-      isRunning = false;
-      synth.cancel();
-      playBeep(784, 0.25);
-
-      document.getElementById('runnerView').style.display = 'none';
-      document.getElementById('reviewView').style.display = 'block';
-
-      const listContainer = document.getElementById('reviewList');
-      listContainer.innerHTML = '';
-
-      questions.forEach((q, idx) => {
-        const isAlreadyMarkedWrong = wrongIndices.has(idx);
-        const item = document.createElement('div');
-        item.className = `review-item ${isAlreadyMarkedWrong ? 'wrong' : ''}`;
-        item.id = `reviewItem_${idx}`;
-
-        item.innerHTML = `
-          <div class="item-info">
-            <span class="item-idx">#${idx + 1}</span>
-            <button class="item-play-btn" title="聽發音" onclick="playSingleWord('${encodeURIComponent(q)}')">🔊</button>
-            <span>${escapeHtml(q)}</span>
-          </div>
-          <div class="judge-btns">
-            <button class="judge-btn btn-mark-right ${!isAlreadyMarkedWrong ? 'selected' : ''}" onclick="markResult(${idx}, true)">
-              ✔️ 正確
-            </button>
-            <button class="judge-btn btn-mark-wrong ${isAlreadyMarkedWrong ? 'selected' : ''}" onclick="markResult(${idx}, false)">
-              ❌ 寫錯了
-            </button>
-          </div>
-        `;
-        listContainer.appendChild(item);
-      });
-
-      updateWrongCountDisplay();
-    }
-
-    function markResult(index, isCorrect) {
-      const itemEl = document.getElementById(`reviewItem_${index}`);
-      const btnRight = itemEl.querySelector('.btn-mark-right');
-      const btnWrong = itemEl.querySelector('.btn-mark-wrong');
-
-      if (isCorrect) {
-        wrongIndices.delete(index);
-        itemEl.classList.remove('wrong');
-        itemEl.classList.add('correct');
-        btnRight.classList.add('selected');
-        btnWrong.classList.remove('selected');
-      } else {
-        wrongIndices.add(index);
-        itemEl.classList.remove('correct');
-        itemEl.classList.add('wrong');
-        btnWrong.classList.add('selected');
-        btnRight.classList.remove('selected');
-      }
-      updateWrongCountDisplay();
-    }
-
-    function updateWrongCountDisplay() {
-      const count = wrongIndices.size;
-      document.getElementById('wrongCountSpan').innerText = count;
-      const retryBtn = document.getElementById('retryWrongBtn');
-      retryBtn.style.display = count > 0 ? 'block' : 'none';
-    }
-
-    function retryWrongQuestions() {
-      const wrongList = Array.from(wrongIndices).map(idx => questions[idx]);
-      if (wrongList.length === 0) {
-        alert("太棒了！沒有需要重溫的錯題！");
-        return;
-      }
-      startDictation(wrongList);
-    }
-
-    function restartAll() {
-      startDictation(questions);
-    }
-
-    function backToHome() {
-      isRunning = false;
-      synth.cancel();
-      document.getElementById('runnerView').style.display = 'none';
-      document.getElementById('reviewView').style.display = 'none';
-      document.getElementById('setupView').style.display = 'block';
-    }
-
-    function playSingleWord(encodedText) {
-      const text = decodeURIComponent(encodedText);
-      const lang = document.getElementById('langSelect').value;
-      const rate = document.getElementById('speedSelect').value;
-      speakText(text, lang, rate);
-    }
-
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    function escapeHtml(str) {
-      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      const savedText = localStorage.getItem('last_dict_text');
-      const savedLang = localStorage.getItem('last_dict_lang');
-      if (savedText) {
-        document.getElementById('dictText').value = savedText;
-        updateWordCount();
-      } else {
-        loadPreset('chinese_words');
-      }
-      if (savedLang) {
-        document.getElementById('langSelect').value = savedLang;
-      }
-    });
-  </script>
+if (window.speechSynthesis) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.addEventListener("voiceschanged", refreshEngine);
+}
+window.addEventListener("DOMContentLoaded", () => {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem("dictation-helper-v2") || "null"); } catch (e) {}
+  if (saved && saved.text) {
+    $("dictText").value = saved.text;
+    $("langSelect").value = saved.lang || "cantonese";
+    $("speedSelect").value = saved.rate || "0.85";
+    $("repeatSelect").value = saved.repeats || "2";
+    $("intervalSelect").value = saved.interval || "auto";
+    $("engineSelect").value = saved.engine || "auto";
+    $("charHint").checked = saved.charHint !== false;
+    switchMode(saved.mode || "paper");
+    setKind(saved.kind || "words");
+  } else {
+    loadPreset("cn-words");
+  }
+  refreshEngine();
+  persistAndCount();
+});
+</script>
 </body>
 </html>
