@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>自主默書小助手 - 粵語報讀 · 詞語 / 句子 / 篇章</title>
-  <meta name="description" content="功課班學生自行聽寫對卷。香港粵語報讀，支援詞語、句子與篇章默書。">
+  <meta name="description" content="功課班學生自行聽寫對卷。香港粵語報讀，支援詞語、句子、篇章，以及拍照輸入。">
   <style>
     :root {
       --paper: #f3eee4;
@@ -92,6 +92,12 @@
     .btn-seal { background: var(--seal); color: #fff; }
     .tip { margin-top: 16px; border-left: 3px solid var(--teal); padding-left: 12px; font-size: 12px; color: var(--ink-muted); line-height: 1.6; }
     .hidden { display: none !important; }
+    .photo-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .photo-row .btn { height: 44px; flex: 0 1 auto; font-size: 14px; }
+    .photo-panel { margin-top: 10px; border: 1px solid var(--rule); background: var(--paper); border-radius: 14px; padding: 12px; }
+    .photo-panel img { width: 80px; height: 80px; object-fit: cover; border-radius: 10px; }
+    .photo-head { display: flex; gap: 12px; align-items: flex-start; }
+    #ocrText { min-height: 110px; margin-top: 10px; font-family: var(--serif); }
     .topbar { display: flex; justify-content: space-between; align-items: center; }
     .progress { height: 8px; background: var(--paper); border-radius: 999px; overflow: hidden; margin: 14px 0 18px; }
     .progress > div { height: 100%; background: var(--teal); width: 0; transition: width .25s cubic-bezier(.22,1,.36,1); }
@@ -135,7 +141,7 @@
     </div>
     <div>
       <h1>自主默書小助手</h1>
-      <p class="subtitle">功課班自行聽寫對卷 · 香港粵語報讀 · 詞語 / 句子 / 篇章</p>
+      <p class="subtitle">功課班自行聽寫對卷 · 香港粵語報讀 · 拍照輸入</p>
     </div>
   </header>
 
@@ -161,6 +167,32 @@
         <span class="muted" id="wordCountTip">共 0 個詞語</span>
       </div>
       <textarea id="dictText" placeholder="請貼上詞語，一行一個" oninput="persistAndCount()"></textarea>
+      <div class="photo-row">
+        <button type="button" class="btn btn-sec" id="btnCam" onclick="pickPhoto('camera')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+          拍照輸入
+        </button>
+        <button type="button" class="btn btn-sec" id="btnAlbum" onclick="pickPhoto('album')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          從相簿選
+        </button>
+      </div>
+      <p class="hint">拍課本、詞語表或工作紙，自動抽出默書內容。請核對後再採用。首次辨識需下載中文檔。</p>
+      <input type="file" id="photoCam" accept="image/*" capture="environment" class="hidden" onchange="onPhotoFile(this)">
+      <input type="file" id="photoAlbum" accept="image/*" class="hidden" onchange="onPhotoFile(this)">
+      <div id="photoPanel" class="photo-panel hidden">
+        <div class="photo-head">
+          <img id="photoThumb" alt="相片預覽">
+          <p class="hint" id="photoStatus"></p>
+        </div>
+        <textarea id="ocrText" class="hidden"></textarea>
+        <div id="photoActions" class="photo-row hidden">
+          <button type="button" class="btn btn-main" onclick="applyOcr('replace')">採用（取代）</button>
+          <button type="button" class="btn btn-sec" onclick="applyOcr('append')">加到現有內容</button>
+          <button type="button" class="btn btn-ghost" onclick="cancelOcr()">取消</button>
+        </div>
+        <button type="button" class="btn btn-ghost hidden" id="photoClose" onclick="cancelOcr()">關閉</button>
+      </div>
       <div class="chips">
         <button class="chip" onclick="loadPreset('cn-words')">小學中文生字</button>
         <button class="chip" onclick="loadPreset('cn-idioms')">中文詞語成語</button>
@@ -238,7 +270,7 @@
       <button class="btn btn-sec" onclick="testVoice()">試聽發音</button>
       <button class="btn btn-main" onclick="startDictation()">開始自主默書</button>
     </div>
-    <p class="tip" id="modeNotice">紙筆模式：準備默書簿。系統會先報題號再報讀。詞語可逐字提示；篇章會先全文導讀，再逐句默寫。完成後用紅筆對卷。</p>
+    <p class="tip" id="modeNotice">紙筆模式：可拍照課本或詞語表匯入。系統會先報題號再報讀。詞語可逐字提示；篇章會先全文導讀，再逐句默寫。完成後用紅筆對卷。</p>
   </section>
 
   <section class="card hidden" id="runnerView">
@@ -282,7 +314,7 @@
     </div>
   </section>
 
-  <footer>專為功課班自主學習設計 · 粵語報讀唔會誤用普通話</footer>
+  <footer>專為功課班自主學習設計 · 粵語報讀 · 拍照輸入</footer>
 </div>
 
 <script>
@@ -566,6 +598,7 @@ function playBeep(freq, dur, type) {
 
 let currentMode = "paper";
 let currentKind = "words";
+let photoBusy = false;
 let units = [];
 let currentIndex = 0;
 let isRunning = false;
@@ -592,8 +625,8 @@ function switchMode(mode) {
   $("tabTyping").classList.toggle("active", mode === "typing");
   $("intervalGroup").style.display = mode === "paper" ? "block" : "none";
   $("modeNotice").textContent = mode === "paper"
-    ? "紙筆模式：準備默書簿。系統會先報題號再報讀。詞語可逐字提示；篇章會先全文導讀，再逐句默寫。完成後用紅筆對卷。"
-    : "打字模式：聽完後在螢幕輸入答案。適合英文拼寫或高小自查。";
+    ? "紙筆模式：可拍照課本或詞語表匯入。系統會先報題號再報讀。詞語可逐字提示；篇章會先全文導讀，再逐句默寫。完成後用紅筆對卷。"
+    : "打字模式：聽完後在螢幕輸入答案。適合英文拼寫或高小自查。也可先拍照匯入內容。";
   persistAndCount();
 }
 function setKind(kind) {
@@ -842,7 +875,166 @@ function retryWrongQuestions() {
 }
 function restartAll() { startDictation(units.map((u) => ({ ...u }))); }
 function backToHome() { isRunning = false; cancelSpeech(); show("setupView"); }
-function escapeHtml(str) { return str.replace(/&/g,"&").replace(/</g,"<").replace(/>/g,">"); }
+function escapeHtml(str) {
+  const el = document.createElement("span");
+  el.textContent = String(str);
+  return el.innerHTML;
+}
+
+const OCR_HEADER = /^(單元\s*[一二三四五六七八九十0-9０-９]+|課文\s*[一二三四五六七八九十0-9０-９]|詞語表|生字表|默書(範圍|紙|內容)?$|默寫紙|姓名\s*[：:]|班別\s*[：:]|日期\s*[：:]|名[字稱]\s*[：:]|class\s*[：:]|name\s*[：:]|date\s*[：:]|p\.?\s*\d+$)/i;
+function cleanOcrText(raw) {
+  return raw.replace(/\r/g, "").split("\n").map(function (line) {
+    return line.replace(/[|｜]/g, " ").replace(/[●○•·]/g, " ").replace(/\s+/g, " ").trim();
+  }).filter(Boolean).filter(function (line) {
+    return !OCR_HEADER.test(line) && !/^[0-9０-９]{1,3}$/.test(line);
+  }).map(function (line) {
+    return line.replace(/^[0-9０-９]+[\.．、\)）]\s*/, "").trim();
+  }).filter(function (line) { return line.length >= 1; }).join("\n");
+}
+function detectKind(text) {
+  const lines = text.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+  if (!lines.length) return "words";
+  const punct = (text.match(/[。！？.!?]/g) || []).length;
+  const lengths = lines.map(function (l) { return [...l].length; });
+  const avg = lengths.reduce(function (n, x) { return n + x; }, 0) / lines.length;
+  const max = Math.max.apply(null, lengths);
+  if (punct === 0 && avg <= 8) return "words";
+  if (max >= 32 || (punct >= 2 && avg >= 18)) return "passage";
+  if (punct >= 1 || avg >= 10) return "sentences";
+  return "words";
+}
+function formatOcr(raw, kind) {
+  const cleaned = cleanOcrText(raw);
+  if (!cleaned) return "";
+  if (kind !== "words") return cleaned;
+  const words = [];
+  cleaned.split("\n").forEach(function (line) {
+    const parts = line.split(/[\s,，、;；]+/).map(function (s) { return s.trim(); }).filter(Boolean);
+    if (parts.length > 1 && parts.every(function (p) { return [...p].length <= 8; })) words.push.apply(words, parts);
+    else words.push(line);
+  });
+  return words.join("\n");
+}
+function pickPhoto(which) {
+  if (photoBusy) return;
+  $(which === "camera" ? "photoCam" : "photoAlbum").click();
+}
+function setPhotoBusy(busy) {
+  photoBusy = busy;
+  $("btnCam").disabled = busy;
+  $("btnAlbum").disabled = busy;
+}
+function cancelOcr() {
+  $("photoPanel").classList.add("hidden");
+  $("ocrText").classList.add("hidden");
+  $("photoActions").classList.add("hidden");
+  $("photoClose").classList.add("hidden");
+  $("photoCam").value = "";
+  $("photoAlbum").value = "";
+  setPhotoBusy(false);
+}
+function applyOcr(mode) {
+  const next = $("ocrText").value.trim();
+  if (!next) return;
+  const detected = detectKind(next);
+  if (detected !== currentKind) setKind(detected);
+  if (mode === "append" && $("dictText").value.trim()) {
+    $("dictText").value = $("dictText").value.trim() + "\n" + next;
+  } else {
+    $("dictText").value = next;
+  }
+  if (/[A-Za-z]{3,}/.test(next) && !/\p{Script=Han}/u.test(next)) $("langSelect").value = "english_uk";
+  else if (/\p{Script=Han}/u.test(next) && ($("langSelect").value === "english_uk" || $("langSelect").value === "english_us")) {
+    $("langSelect").value = "cantonese";
+  }
+  persistAndCount();
+  refreshEngine();
+  cancelOcr();
+}
+function compressImage(file) {
+  return new Promise(function (resolve, reject) {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = function () {
+      const max = 1280;
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(img.width * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", 0.78));
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("image")); };
+    img.src = url;
+  });
+}
+function loadTesseract() {
+  if (window.Tesseract) return Promise.resolve(window.Tesseract);
+  return new Promise(function (resolve, reject) {
+    const existing = document.querySelector("script[data-tesseract]");
+    if (existing) {
+      existing.addEventListener("load", function () { resolve(window.Tesseract); }, { once: true });
+      existing.addEventListener("error", function () { reject(new Error("tesseract")); }, { once: true });
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
+    script.async = true;
+    script.dataset.tesseract = "1";
+    script.onload = function () { resolve(window.Tesseract); };
+    script.onerror = function () { reject(new Error("tesseract")); };
+    document.head.appendChild(script);
+  });
+}
+async function onPhotoFile(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  setPhotoBusy(true);
+  $("photoPanel").classList.remove("hidden");
+  $("ocrText").classList.add("hidden");
+  $("photoActions").classList.add("hidden");
+  $("photoClose").classList.add("hidden");
+  $("photoStatus").textContent = "正在處理相片…";
+  try {
+    const dataUrl = await compressImage(file);
+    $("photoThumb").src = dataUrl;
+    $("photoStatus").textContent = "首次使用會下載中文辨識檔，請稍候…";
+    const Tesseract = await loadTesseract();
+    const worker = await Tesseract.createWorker("chi_tra+eng", 1, {
+      logger: function (m) {
+        if (m.status === "loading language traineddata") {
+          $("photoStatus").textContent = "下載中文辨識檔 " + Math.round((m.progress || 0) * 100) + "%";
+        } else if (m.status === "recognizing text") {
+          $("photoStatus").textContent = "辨識中 " + Math.round((m.progress || 0) * 100) + "%";
+        }
+      }
+    });
+    let out;
+    try {
+      out = await worker.recognize(dataUrl);
+    } finally {
+      await worker.terminate();
+    }
+    const kindGuess = detectKind(cleanOcrText(out.data.text || ""));
+    const formatted = formatOcr(out.data.text || "", kindGuess || currentKind);
+    if (!formatted) throw new Error("empty");
+    $("ocrText").value = formatted;
+    $("ocrText").classList.remove("hidden");
+    $("photoActions").classList.remove("hidden");
+    $("photoStatus").textContent = "辨識完成，請核對文字" + (kindGuess !== currentKind ? "。系統判斷為「" + ({words:"詞語",sentences:"句子",passage:"篇章"}[kindGuess]) + "」" : "");
+    $("btnCam").disabled = false;
+    $("btnAlbum").disabled = false;
+    photoBusy = false;
+  } catch (e) {
+    $("photoStatus").textContent = "未能辨識文字。請影清楚、光線充足，或改為手動輸入。";
+    $("photoClose").classList.remove("hidden");
+    $("btnCam").disabled = false;
+    $("btnAlbum").disabled = false;
+    photoBusy = false;
+  }
+}
 
 if (window.speechSynthesis) {
   window.speechSynthesis.getVoices();
