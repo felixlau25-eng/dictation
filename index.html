@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>自主默書小助手 - 粵語報讀 · 詞語 / 句子 / 篇章</title>
-  <meta name="description" content="功課班學生自行聽寫對卷。香港粵語報讀，支援詞語、句子、篇章，以及拍照輸入。">
+  <meta name="description" content="功課班學生自行聽寫對卷。香港粵語報讀，支援詞語、句子、篇章、拍照輸入與默書庫。">
   <style>
     :root {
       --paper: #f3eee4;
@@ -98,6 +98,19 @@
     .photo-panel img { width: 80px; height: 80px; object-fit: cover; border-radius: 10px; }
     .photo-head { display: flex; gap: 12px; align-items: flex-start; }
     #ocrText { min-height: 110px; margin-top: 10px; font-family: var(--serif); }
+    .library { margin-top: 12px; border: 1px solid var(--rule); background: var(--paper); border-radius: 14px; padding: 12px; }
+    .library-title { font-size: 14px; font-weight: 700; }
+    .lib-item {
+      margin-top: 8px; padding: 12px; border: 1px solid var(--rule); background: var(--paper-raised);
+      border-radius: 12px; display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap;
+    }
+    .lib-item.active { border-color: var(--teal); background: var(--teal-soft); }
+    .lib-name { font-family: var(--serif); font-size: 16px; font-weight: 700; }
+    .lib-meta { font-size: 12px; color: var(--ink-subtle); margin-top: 2px; }
+    .lib-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .lib-actions .btn { height: 40px; font-size: 13px; flex: 0 0 auto; min-width: 72px; padding: 0 12px; }
+    #libStatus { color: var(--teal); font-size: 13px; margin-top: 8px; }
+    #libName { margin-top: 8px; }
     .topbar { display: flex; justify-content: space-between; align-items: center; }
     .progress { height: 8px; background: var(--paper); border-radius: 999px; overflow: hidden; margin: 14px 0 18px; }
     .progress > div { height: 100%; background: var(--teal); width: 0; transition: width .25s cubic-bezier(.22,1,.36,1); }
@@ -141,7 +154,7 @@
     </div>
     <div>
       <h1>自主默書小助手</h1>
-      <p class="subtitle">功課班自行聽寫對卷 · 香港粵語報讀 · 拍照輸入</p>
+      <p class="subtitle">功課班自行聽寫對卷 · 香港粵語報讀 · 默書庫</p>
     </div>
   </header>
 
@@ -192,6 +205,26 @@
           <button type="button" class="btn btn-ghost" onclick="cancelOcr()">取消</button>
         </div>
         <button type="button" class="btn btn-ghost hidden" id="photoClose" onclick="cancelOcr()">關閉</button>
+      </div>
+      <div class="library" id="libraryBox">
+        <p class="library-title">默書庫</p>
+        <p class="hint">儲存在這部平板。老師或學生輸入一次，下次直接提取，不用刪掉舊內容。</p>
+        <div class="photo-row">
+          <button type="button" class="btn btn-sec" id="btnSavePaper" onclick="openSaveForm()">儲存這份</button>
+          <button type="button" class="btn btn-main hidden" id="btnUpdatePaper" onclick="updateActivePaper()">更新這份</button>
+        </div>
+        <div id="saveForm" class="hidden" style="margin-top:10px">
+          <label for="libName">清單名稱</label>
+          <input type="text" id="libName" placeholder="例如：三年級 單元二、小明 生字" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmSavePaper();}">
+          <p class="hint">同名會覆蓋舊清單。不同名字會另存一份。</p>
+          <div class="photo-row">
+            <button type="button" class="btn btn-main" onclick="confirmSavePaper()">確認儲存</button>
+            <button type="button" class="btn btn-ghost" onclick="closeSaveForm()">取消</button>
+          </div>
+        </div>
+        <p class="hint" id="libStatus"></p>
+        <input type="text" id="libSearch" class="hidden" placeholder="搜尋清單名稱" autocomplete="off" oninput="renderLibrary()" style="margin-top:8px">
+        <div id="libList"></div>
       </div>
       <div class="chips">
         <button class="chip" onclick="loadPreset('cn-words')">小學中文生字</button>
@@ -270,7 +303,7 @@
       <button class="btn btn-sec" onclick="testVoice()">試聽發音</button>
       <button class="btn btn-main" onclick="startDictation()">開始自主默書</button>
     </div>
-    <p class="tip" id="modeNotice">紙筆模式：可拍照課本或詞語表匯入。系統會先報題號再報讀。詞語可逐字提示；篇章會先全文導讀，再逐句默寫。完成後用紅筆對卷。</p>
+    <p class="tip" id="modeNotice">紙筆模式：可拍照或從默書庫提取。系統會先報題號再報讀。詞語可逐字提示；篇章會先全文導讀，再逐句默寫。完成後用紅筆對卷。</p>
   </section>
 
   <section class="card hidden" id="runnerView">
@@ -314,7 +347,7 @@
     </div>
   </section>
 
-  <footer>專為功課班自主學習設計 · 粵語報讀 · 拍照輸入</footer>
+  <footer>專為功課班自主學習設計 · 粵語報讀 · 默書庫</footer>
 </div>
 
 <script>
@@ -599,6 +632,8 @@ function playBeep(freq, dur, type) {
 let currentMode = "paper";
 let currentKind = "words";
 let photoBusy = false;
+let activePaperId = null;
+let confirmDeleteId = null;
 let units = [];
 let currentIndex = 0;
 let isRunning = false;
@@ -625,8 +660,8 @@ function switchMode(mode) {
   $("tabTyping").classList.toggle("active", mode === "typing");
   $("intervalGroup").style.display = mode === "paper" ? "block" : "none";
   $("modeNotice").textContent = mode === "paper"
-    ? "紙筆模式：可拍照課本或詞語表匯入。系統會先報題號再報讀。詞語可逐字提示；篇章會先全文導讀，再逐句默寫。完成後用紅筆對卷。"
-    : "打字模式：聽完後在螢幕輸入答案。適合英文拼寫或高小自查。也可先拍照匯入內容。";
+    ? "紙筆模式：可拍照或從默書庫提取。系統會先報題號再報讀。詞語可逐字提示；篇章會先全文導讀，再逐句默寫。完成後用紅筆對卷。"
+    : "打字模式：聽完後在螢幕輸入答案。適合英文拼寫或高小自查。也可先拍照或從默書庫提取。";
   persistAndCount();
 }
 function setKind(kind) {
@@ -643,9 +678,10 @@ function persistAndCount() {
   localStorage.setItem("dictation-helper-v2", JSON.stringify({
     text: $("dictText").value, kind: currentKind, lang: $("langSelect").value, mode: currentMode,
     rate: $("speedSelect").value, repeats: $("repeatSelect").value, interval: $("intervalSelect").value,
-    engine: $("engineSelect").value, charHint: $("charHint").checked
+    engine: $("engineSelect").value, charHint: $("charHint").checked, activePaperId: activePaperId
   }));
   refreshCharHint();
+  if ($("libList")) renderLibrary();
 }
 function refreshCharHint() {
   $("charHintWrap").style.display = (currentKind === "words" && $("langSelect").value === "cantonese") ? "block" : "none";
@@ -662,9 +698,10 @@ function loadPreset(id) {
   if (!p) return;
   $("dictText").value = p.text;
   $("langSelect").value = p.lang;
+  activePaperId = null;
   setKind(p.kind);
 }
-function clearText() { $("dictText").value = ""; persistAndCount(); }
+function clearText() { $("dictText").value = ""; activePaperId = null; persistAndCount(); renderLibrary(); }
 
 async function testVoice() {
   $("testStatus").textContent = "正在報讀試聽…";
@@ -1036,6 +1073,156 @@ async function onPhotoFile(input) {
   }
 }
 
+const LIBRARY_KEY = "dictation-library-v1";
+const MAX_PAPERS = 60;
+function normalizeName(name) { return String(name || "").replace(/\s+/g, " ").trim().slice(0, 40); }
+function newPaperId() { return "p-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8); }
+function loadLibrary() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(LIBRARY_KEY) || "[]");
+    const list = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.papers) ? raw.papers : []);
+    return list.filter(function (p) {
+      return p && p.id && p.name && typeof p.text === "string" &&
+        (p.kind === "words" || p.kind === "sentences" || p.kind === "passage") &&
+        (p.lang === "cantonese" || p.lang === "mandarin" || p.lang === "english_uk" || p.lang === "english_us") &&
+        typeof p.updatedAt === "number";
+    }).sort(function (a, b) { return b.updatedAt - a.updatedAt; });
+  } catch (e) { return []; }
+}
+function persistLibrary(papers) { localStorage.setItem(LIBRARY_KEY, JSON.stringify(papers)); }
+function paperMeta(paper) {
+  const parsed = parseItems(paper.text, paper.kind);
+  if (paper.kind === "words") return "詞語 · " + parsed.items.length + " 個";
+  if (paper.kind === "sentences") return "句子 · " + parsed.items.length + " 句";
+  return "篇章 · " + parsed.items.length + " 篇";
+}
+function formatUpdatedAt(ts) {
+  const now = Date.now();
+  const diff = now - ts;
+  if (diff < 60000) return "剛剛";
+  if (diff < 3600000) return Math.max(1, Math.floor(diff / 60000)) + " 分鐘前";
+  const d = new Date(ts);
+  const n = new Date(now);
+  if (d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate()) return "今天";
+  return (d.getMonth() + 1) + "月" + d.getDate() + "日";
+}
+function suggestName(kind, text) {
+  const first = text.trim().split("\n").map(function (s) { return s.trim(); }).filter(Boolean)[0] || "";
+  const short = [...first].slice(0, 10).join("");
+  const label = kind === "words" ? "詞語" : kind === "sentences" ? "句子" : "篇章";
+  return normalizeName(short ? (label + " " + short) : label);
+}
+function upsertPaper(papers, input) {
+  const name = normalizeName(input.name);
+  const text = (input.text || "").replace(/\r\n/g, "\n").trim();
+  if (!name || !text) throw new Error("invalid");
+  const byId = input.id ? papers.find(function (p) { return p.id === input.id; }) : null;
+  const byName = papers.find(function (p) { return p.name === name; });
+  const existing = byId || byName;
+  const paper = {
+    id: existing ? existing.id : newPaperId(),
+    name: name, text: text, kind: input.kind, lang: input.lang, updatedAt: Date.now()
+  };
+  const next = [paper].concat(papers.filter(function (p) { return p.id !== paper.id && p.name !== paper.name; }))
+    .sort(function (a, b) { return b.updatedAt - a.updatedAt; })
+    .slice(0, MAX_PAPERS);
+  return { papers: next, paper: paper, replaced: !!existing };
+}
+function findActivePaper() {
+  if (!activePaperId) return null;
+  return loadLibrary().find(function (p) { return p.id === activePaperId; }) || null;
+}
+function isDirty(paper) {
+  return paper.text !== $("dictText").value.replace(/\r\n/g, "\n").trim() || paper.kind !== currentKind || paper.lang !== $("langSelect").value;
+}
+function setLibStatus(msg) { $("libStatus").textContent = msg || ""; }
+function openSaveForm() {
+  if (!$("dictText").value.trim()) { setLibStatus("請先輸入默書內容。"); return; }
+  const active = findActivePaper();
+  $("libName").value = active ? active.name : suggestName(currentKind, $("dictText").value);
+  $("saveForm").classList.remove("hidden");
+  $("libName").focus();
+  $("libName").select();
+}
+function closeSaveForm() { $("saveForm").classList.add("hidden"); }
+function confirmSavePaper() {
+  try {
+    const result = upsertPaper(loadLibrary(), {
+      name: $("libName").value, text: $("dictText").value, kind: currentKind, lang: $("langSelect").value
+    });
+    persistLibrary(result.papers);
+    activePaperId = result.paper.id;
+    closeSaveForm();
+    persistAndCount();
+    renderLibrary();
+    setLibStatus((result.replaced ? "已更新「" : "已儲存「") + result.paper.name + "」");
+  } catch (e) {
+    setLibStatus("請先輸入名稱和默書內容。");
+  }
+}
+function updateActivePaper() {
+  const active = findActivePaper();
+  if (!active) return;
+  $("libName").value = active.name;
+  confirmSavePaper();
+}
+function usePaper(id) {
+  const paper = loadLibrary().find(function (p) { return p.id === id; });
+  if (!paper) return;
+  $("dictText").value = paper.text;
+  $("langSelect").value = paper.lang;
+  activePaperId = paper.id;
+  confirmDeleteId = null;
+  setKind(paper.kind);
+  refreshEngine();
+  renderLibrary();
+  setLibStatus("已載入「" + paper.name + "」，可開始默書");
+}
+function deletePaper(id) {
+  if (confirmDeleteId !== id) { confirmDeleteId = id; renderLibrary(); return; }
+  const papers = loadLibrary();
+  const paper = papers.find(function (p) { return p.id === id; });
+  persistLibrary(papers.filter(function (p) { return p.id !== id; }));
+  if (activePaperId === id) activePaperId = null;
+  confirmDeleteId = null;
+  persistAndCount();
+  renderLibrary();
+  setLibStatus(paper ? ("已刪除「" + paper.name + "」") : "已刪除");
+}
+function renderLibrary() {
+  const papers = loadLibrary();
+  const active = findActivePaper();
+  const dirty = !!(active && isDirty(active));
+  $("btnUpdatePaper").classList.toggle("hidden", !dirty);
+  $("btnUpdatePaper").textContent = active && dirty ? ("更新「" + active.name + "」") : "更新這份";
+  $("btnSavePaper").disabled = !$("dictText").value.trim();
+  $("libSearch").classList.toggle("hidden", papers.length < 6);
+  const q = ($("libSearch").value || "").trim();
+  const visible = q ? papers.filter(function (p) { return p.name.indexOf(q) >= 0; }) : papers;
+  const list = $("libList");
+  if (!papers.length) {
+    list.innerHTML = '<p class="hint">尚未儲存。貼上、拍照或用範例後，按「儲存這份」。</p>';
+    return;
+  }
+  if (q && !visible.length) {
+    list.innerHTML = '<p class="hint">沒有符合「' + escapeHtml(q) + '」的清單。</p>';
+    return;
+  }
+  list.innerHTML = visible.map(function (p) {
+    const current = p.id === activePaperId;
+    const loaded = current && !isDirty(p);
+    return '<div class="lib-item' + (current ? ' active' : '') + '">' +
+      '<div><div class="lib-name">' + escapeHtml(p.name) + '</div>' +
+      '<div class="lib-meta">' + escapeHtml(paperMeta(p)) + ' · ' + formatUpdatedAt(p.updatedAt) + (current ? ' · 使用中' : '') + '</div></div>' +
+      '<div class="lib-actions">' +
+      '<button type="button" class="btn btn-main" ' + (loaded ? 'disabled' : '') + ' onclick="usePaper(\'' + p.id.replace(/'/g, '') + '\')">' + (loaded ? '已載入' : '使用') + '</button>' +
+      (confirmDeleteId === p.id
+        ? '<button type="button" class="btn btn-seal" onclick="deletePaper(\'' + p.id.replace(/'/g, '') + '\')">確定刪除</button><button type="button" class="btn btn-ghost" onclick="confirmDeleteId=null;renderLibrary()">取消</button>'
+        : '<button type="button" class="btn btn-ghost" onclick="deletePaper(\'' + p.id.replace(/'/g, '') + '\')">刪除</button>') +
+      '</div></div>';
+  }).join("");
+}
+
 if (window.speechSynthesis) {
   window.speechSynthesis.getVoices();
   window.speechSynthesis.addEventListener("voiceschanged", refreshEngine);
@@ -1051,6 +1238,7 @@ window.addEventListener("DOMContentLoaded", () => {
     $("intervalSelect").value = saved.interval || "auto";
     $("engineSelect").value = saved.engine || "auto";
     $("charHint").checked = saved.charHint !== false;
+    activePaperId = saved.activePaperId || null;
     switchMode(saved.mode || "paper");
     setKind(saved.kind || "words");
   } else {
@@ -1058,6 +1246,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
   refreshEngine();
   persistAndCount();
+  renderLibrary();
 });
 </script>
 </body>
