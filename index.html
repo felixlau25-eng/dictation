@@ -1,1 +1,211 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <title>自主默書小助手 - 粵語報讀 · 詞語 / 句子 / 篇章</title>
+  <meta name="description" content="功課班學生自行聽寫對卷。香港粵語報讀，支援詞語、句子、篇章、拍照輸入與默書庫。">
+  <link rel="stylesheet" href="style.css?v=20260919b">
+</head>
+<body>
+<audio id="ttsPlayer" referrerpolicy="no-referrer" playsinline webkit-playsinline preload="auto"></audio>
+<div class="wrap">
+  <header>
+    <div class="logo" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    </div>
+    <div>
+      <h1>自主默書小助手</h1>
+      <p class="subtitle">功課班自行聽寫對卷 · 香港粵語報讀 · 默書庫</p>
+    </div>
+  </header>
+
+  <section class="card" id="setupView">
+    <div class="seg" role="tablist">
+      <button type="button" class="active" id="tabPaper" onclick="switchMode('paper')">紙筆實戰</button>
+      <button type="button" id="tabTyping" onclick="switchMode('typing')">螢幕打字</button>
+    </div>
+
+    <div style="margin-top:20px">
+      <span class="label">默書範圍</span>
+      <div class="seg seg-3">
+        <button type="button" class="kind-btn active" id="kind-words" onclick="setKind('words')">詞語</button>
+        <button type="button" class="kind-btn" id="kind-sentences" onclick="setKind('sentences')">句子</button>
+        <button type="button" class="kind-btn" id="kind-passage" onclick="setKind('passage')">篇章</button>
+      </div>
+      <p class="hint" id="kindHint">生字、詞彙、成語。一行一個，或用逗號分隔。</p>
+    </div>
+
+    <div style="margin-top:16px">
+      <div class="row">
+        <label for="dictText">默書內容</label>
+        <span class="muted" id="wordCountTip">共 0 個詞語</span>
+      </div>
+      <textarea id="dictText" placeholder="請貼上詞語，一行一個" oninput="persistAndCount()"></textarea>
+      <div class="photo-row">
+        <button type="button" class="btn btn-sec" id="btnCam" onclick="pickPhoto('camera')">拍照輸入</button>
+        <button type="button" class="btn btn-sec" id="btnAlbum" onclick="pickPhoto('album')">從相簿選</button>
+      </div>
+      <p class="hint">拍課本、詞語表或工作紙，自動抽出默書內容。請核對後再採用。</p>
+      <input type="file" id="photoCam" accept="image/*" capture="environment" class="hidden" onchange="onPhotoFile(this)">
+      <input type="file" id="photoAlbum" accept="image/*" class="hidden" onchange="onPhotoFile(this)">
+      <div id="photoPanel" class="photo-panel hidden">
+        <div class="photo-head">
+          <img id="photoThumb" alt="相片預覽">
+          <p class="hint" id="photoStatus"></p>
+        </div>
+        <textarea id="ocrText" class="hidden"></textarea>
+        <div id="photoActions" class="photo-row hidden">
+          <button type="button" class="btn btn-main" onclick="applyOcr('replace')">採用（取代）</button>
+          <button type="button" class="btn btn-sec" onclick="applyOcr('append')">加到現有內容</button>
+          <button type="button" class="btn btn-ghost" onclick="cancelOcr()">取消</button>
+        </div>
+        <button type="button" class="btn btn-ghost hidden" id="photoClose" onclick="cancelOcr()">關閉</button>
+      </div>
+      <div class="library" id="libraryBox">
+        <p class="library-title">默書庫</p>
+        <p class="hint">儲存在這部平板。老師或學生輸入一次，下次直接提取。</p>
+        <div class="photo-row">
+          <button type="button" class="btn btn-sec" id="btnSavePaper" onclick="openSaveForm()">儲存這份</button>
+          <button type="button" class="btn btn-main hidden" id="btnUpdatePaper" onclick="updateActivePaper()">更新這份</button>
+        </div>
+        <div id="saveForm" class="hidden" style="margin-top:10px">
+          <label for="libName">清單名稱</label>
+          <input type="text" id="libName" placeholder="例如：三年級 單元二" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmSavePaper();}">
+          <div class="photo-row">
+            <button type="button" class="btn btn-main" onclick="confirmSavePaper()">確認儲存</button>
+            <button type="button" class="btn btn-ghost" onclick="closeSaveForm()">取消</button>
+          </div>
+        </div>
+        <p class="hint" id="libStatus"></p>
+        <input type="text" id="libSearch" class="hidden" placeholder="搜尋清單名稱" autocomplete="off" oninput="renderLibrary()" style="margin-top:8px">
+        <div id="libList"></div>
+      </div>
+      <div class="chips">
+        <button class="chip" onclick="loadPreset('cn-words')">小學中文生字</button>
+        <button class="chip" onclick="loadPreset('cn-idioms')">中文詞語成語</button>
+        <button class="chip" onclick="loadPreset('cn-sentences')">中文句子</button>
+        <button class="chip" onclick="loadPreset('cn-passage')">小學短文</button>
+        <button class="chip" onclick="loadPreset('en-words')">英文常考生字</button>
+        <button class="chip" onclick="loadPreset('en-sentences')">英文句子</button>
+        <button class="chip" onclick="loadPreset('en-passage')">英文短文</button>
+        <button class="chip danger" onclick="clearText()">清空</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <label for="langSelect">報讀語言</label>
+        <select id="langSelect" onchange="persistAndCount(); refreshEngine()">
+          <option value="cantonese" selected>廣東話 / 粵語（香港）</option>
+          <option value="mandarin">普通話 / 國語</option>
+          <option value="english_uk">英國英語</option>
+          <option value="english_us">美國英語</option>
+        </select>
+      </div>
+      <div>
+        <label for="speedSelect">語速</label>
+        <select id="speedSelect">
+          <option value="0.7">稍慢（初小／生字）</option>
+          <option value="0.85" selected>標準默書語速</option>
+          <option value="1">正常說話速度</option>
+        </select>
+      </div>
+      <div>
+        <label for="repeatSelect">每題重複</label>
+        <select id="repeatSelect">
+          <option value="1">讀 1 次</option>
+          <option value="2" selected>讀 2 次（標準）</option>
+          <option value="3">讀 3 次</option>
+        </select>
+      </div>
+      <div id="intervalGroup">
+        <label for="intervalSelect">寫字時間</label>
+        <select id="intervalSelect">
+          <option value="auto" selected>按題目長短自動</option>
+          <option value="5">5 秒</option>
+          <option value="8">8 秒</option>
+          <option value="12">12 秒</option>
+          <option value="16">16 秒</option>
+          <option value="20">20 秒</option>
+          <option value="28">28 秒</option>
+          <option value="40">40 秒</option>
+        </select>
+      </div>
+      <div>
+        <label for="engineSelect">語音引擎</label>
+        <select id="engineSelect" onchange="refreshEngine()">
+          <option value="auto" selected>自動（粵語優先雲端）</option>
+          <option value="cloud">強制雲端香港粵語</option>
+          <option value="system">本機語音</option>
+        </select>
+      </div>
+      <div id="charHintWrap">
+        <label class="checkline" style="margin-top:28px">
+          <input type="checkbox" id="charHint" checked>
+          詞語先逐字、再讀整詞
+        </label>
+      </div>
+    </div>
+
+    <div class="engine" id="engineBox">
+      <strong id="engineLabel">雲端香港粵語</strong>
+      <span id="engineDetail">Google 粵語（yue）· 書面語字音，唔會讀成普通話</span>
+    </div>
+    <p class="hint" id="testStatus"></p>
+
+    <div class="actions">
+      <button class="btn btn-sec" onclick="testVoice()">試聽發音</button>
+      <button class="btn btn-ghost" onclick="testBeep()">測試喇叭</button>
+      <button class="btn btn-main" onclick="startDictation()">開始自主默書</button>
+    </div>
+    <p class="tip" id="modeNotice">紙筆模式：可拍照或從默書庫提取。系統會先報題號再報讀。</p>
+  </section>
+
+  <section class="card hidden" id="runnerView">
+    <div class="topbar">
+      <button class="btn btn-ghost" onclick="quitRunner()">結束並返回</button>
+      <span class="muted" id="progressText">1 / 10</span>
+    </div>
+    <div class="progress"><div id="progressFill"></div></div>
+    <div class="stage">
+      <span class="badge pulse" id="statusBadge">正在報讀</span>
+      <div class="q-label" id="qNumberDisplay">第 1 題</div>
+      <p class="hint" id="preludeNote"></p>
+      <div id="paperCountdownArea">
+        <div class="count"><span id="countdownSecs">—</span></div>
+        <p class="hint">秒寫字時間 · 請在紙上寫下答案</p>
+      </div>
+      <div id="typingArea" class="hidden">
+        <input type="text" id="typeAnswerInput" class="typing" placeholder="在此輸入答案" autocomplete="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter')checkTypingAnswer()">
+        <p id="typingFeedback" class="hint" style="min-height:20px;font-weight:700"></p>
+        <button class="btn btn-main" style="max-width:220px;margin:8px auto 0" onclick="checkTypingAnswer()">確定</button>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn btn-sec" onclick="manualReplay()">重聽本題</button>
+      <button class="btn btn-sec" id="pauseBtn" onclick="togglePause()">暫停</button>
+      <button class="btn btn-sec" onclick="skipToNext()">下一題</button>
+    </div>
+    <p style="text-align:center;margin-top:14px">
+      <button class="btn btn-ghost" style="color:var(--seal)" onclick="finishDictationEarly()">提前結束，直接看答案</button>
+    </p>
+  </section>
+
+  <section class="card hidden" id="reviewView">
+    <h2 class="review-title">默書完成，請拿出紅筆對卷</h2>
+    <p class="hint">對照答案，圈出寫錯的字，並標記對錯以便重溫。</p>
+    <div class="list" id="reviewList"></div>
+    <div class="actions">
+      <button class="btn btn-seal" id="retryWrongBtn" onclick="retryWrongQuestions()">重溫錯題（<span id="wrongCountSpan">0</span>）</button>
+      <button class="btn btn-sec" onclick="restartAll()">整份再默一次</button>
+      <button class="btn btn-sec" onclick="backToHome()">返回主選單</button>
+    </div>
+  </section>
+
+  <footer>專為功課班自主學習設計 · 粵語報讀 · 默書庫</footer>
+</div>
+<script src="app.js?v=20260919b" defer></script>
+</body>
+</html>
