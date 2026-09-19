@@ -2,7 +2,12 @@
 
 功課班學生自行聽寫、對卷。支援 **香港粵語** 報讀，**詞語 / 句子 / 篇章**，**拍照輸入**，以及 **默書庫**。
 
-線上使用：https://felixlau25-eng.github.io/dictation/
+## 線上使用
+
+- Samsung / Android（Chrome）：https://felixlau25-eng.github.io/dictation/
+- iPad / iPhone（Safari）：https://felixlau25-eng.github.io/dictation/ios/
+
+兩個網址功能相同，只是喇叭解鎖方式不同，請不要混用。
 
 ## 功能
 
@@ -15,10 +20,6 @@
 
 ### 拍照輸入
 拍課本、詞語表或工作紙，或從相簿選圖，自動抽出文字做成默書清單。
-- 會去掉頁碼、單元標題、姓名欄
-- 可判斷詞語／句子／篇章
-- 採用前可先改字，可取代或加到現有內容
-- 此 GitHub 頁用本機辨識，首次使用需下載中文檔，請用網絡
 
 ### 廣東話發音
 - 粵語預設用雲端香港粵語，讀書面語字音
