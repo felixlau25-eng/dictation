@@ -124,10 +124,16 @@ function buildQueue(items, lang, charHint) {
   }
   return units;
 }
-const GOOGLE_ENDPOINTS = ["https://translate.googleapis.com/translate_tts","https://translate.google.com/translate_tts","https://translate.google.com.hk/translate_tts"];
-const YUE_TLS = ["yue","yue-HK","zh-yue"];
+
+const PROXY_TTS = "https://tts-api.netlify.app/";
+const GOOGLE_ENDPOINTS = [
+  "https://translate.googleapis.com/translate_tts",
+  "https://translate.google.com/translate_tts",
+  "https://translate.google.com.hk/translate_tts"
+];
+const YUE_TLS = ["yue", "yue-HK", "zh-yue"];
 const SILENT = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-let activeAudio = null, speakGen = 0, audioUnlocked = false;
+let activeAudio = null, speakGen = 0, audioUnlocked = false, objectUrls = [], bufferSource = null;
 function voices() { return window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }
 function isYueVoice(v) {
   const b = (v.lang + " " + v.name).toLowerCase();
@@ -149,7 +155,7 @@ function inspectEngine(lang, pref) {
     if (pref === "system" && native) return { label: "\u672c\u6a5f\u9999\u6e2f\u7cb5\u8a9e", detail: native.name, source: "system" };
     if (pref === "system" && !native) return { label: "\u96f2\u7aef\u9999\u6e2f\u7cb5\u8a9e\uff08\u5f8c\u5099\uff09", detail: "\u6b64\u88dd\u7f6e\u6c92\u6709\u7cb5\u8a9e\u8a9e\u97f3\uff0c\u4e0d\u6703\u6539\u7528\u666e\u901a\u8a71", source: "cloud", warn: true };
     if (pref === "auto" && native) return { label: "\u672c\u6a5f\u9999\u6e2f\u7cb5\u8a9e", detail: native.name, source: "system" };
-    return { label: "\u96f2\u7aef\u9999\u6e2f\u7cb5\u8a9e", detail: "Google \u7cb5\u8a9e\uff08yue\uff09", source: "cloud" };
+    return { label: "\u96f2\u7aef\u9999\u6e2f\u7cb5\u8a9e", detail: "\u7cb5\u8a9e\u5831\u8b80\uff08\u9069\u7528 iPad\uff09\u00b7 \u5514\u6703\u6539\u7528\u666e\u901a\u8a71", source: "cloud" };
   }
   if (native) return { label: lang === "mandarin" ? "\u672c\u6a5f\u666e\u901a\u8a71" : "\u672c\u6a5f\u82f1\u8a9e", detail: native.name, source: "system" };
   return { label: "\u96f2\u7aef\u8a9e\u97f3", detail: lang, source: "cloud" };
@@ -157,7 +163,9 @@ function inspectEngine(lang, pref) {
 function cancelSpeech() {
   speakGen++;
   try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
+  if (bufferSource) { try { bufferSource.stop(); } catch (e) {} bufferSource = null; }
   if (activeAudio) { try { activeAudio.pause(); activeAudio.removeAttribute("src"); activeAudio.load(); } catch (e) {} }
+  while (objectUrls.length) { try { URL.revokeObjectURL(objectUrls.pop()); } catch (e) {} }
 }
 function chunkText(text, max) {
   const t = text.trim();
@@ -170,14 +178,25 @@ function chunkText(text, max) {
   if (buf.trim()) pieces.push(buf.trim());
   return pieces.length ? pieces : [t];
 }
+function langCode(lang) {
+  if (lang === "cantonese") return "yue";
+  if (lang === "mandarin") return "zh-TW";
+  if (lang === "english_uk") return "en-GB";
+  return "en-US";
+}
 function getPlayer() {
   let audio = document.getElementById("ttsPlayer");
-  if (!audio) { audio = document.createElement("audio"); audio.id = "ttsPlayer"; document.body.appendChild(audio); }
+  if (!audio) {
+    audio = document.createElement("audio");
+    audio.id = "ttsPlayer";
+    document.body.appendChild(audio);
+  }
   audio.setAttribute("referrerpolicy", "no-referrer");
   audio.referrerPolicy = "no-referrer";
   audio.setAttribute("playsinline", "");
   audio.setAttribute("webkit-playsinline", "");
   audio.playsInline = true;
+  try { audio.disableRemotePlayback = true; } catch (e) {}
   audio.preload = "auto";
   audio.muted = false;
   audio.volume = 1;
@@ -185,7 +204,15 @@ function getPlayer() {
   return audio;
 }
 async function unlockAudio() {
-  try { const audio = getPlayer(); activeAudio = audio; audio.src = SILENT; await audio.play(); audio.pause(); } catch (e) {}
+  try {
+    const audio = getPlayer();
+    activeAudio = audio;
+    audio.muted = false;
+    audio.volume = 1;
+    audio.src = SILENT;
+    await audio.play();
+    audio.pause();
+  } catch (e) {}
   audioUnlocked = true;
   try { if (audioCtx && audioCtx.state === "suspended") await audioCtx.resume(); } catch (e) {}
 }
@@ -195,10 +222,12 @@ function playSrc(src, rate, gen) {
     const audio = getPlayer();
     try { audio.pause(); } catch (e) {}
     activeAudio = audio;
+    audio.muted = false;
+    audio.volume = 1;
     audio.playbackRate = Math.min(1.25, Math.max(0.6, rate));
-    const timer = setTimeout(() => done(new Error("timeout")), 18000);
+    const timer = setTimeout(() => done(new Error("timeout")), 20000);
     const done = (err) => {
-      audio.onended = audio.onerror = audio.oncanplaythrough = null;
+      audio.onended = audio.onerror = audio.oncanplaythrough = audio.onloadeddata = null;
       clearTimeout(timer);
       err ? reject(err) : resolve();
     };
@@ -210,18 +239,61 @@ function playSrc(src, rate, gen) {
     audio.play().catch(() => {});
   });
 }
+async function playBlob(blob, rate, gen) {
+  if (gen !== speakGen) return;
+  try {
+    if (audioCtx.state === "suspended") await audioCtx.resume();
+    const raw = await blob.arrayBuffer();
+    const decoded = await audioCtx.decodeAudioData(raw.slice(0));
+    if (gen !== speakGen) return;
+    await new Promise((resolve) => {
+      try { if (bufferSource) bufferSource.stop(); } catch (e) {}
+      const src = audioCtx.createBufferSource();
+      const gain = audioCtx.createGain();
+      bufferSource = src;
+      src.buffer = decoded;
+      try { src.playbackRate.value = Math.min(1.25, Math.max(0.6, rate)); } catch (e) {}
+      gain.gain.value = 1;
+      src.connect(gain); gain.connect(audioCtx.destination);
+      const wait = (decoded.duration / Math.max(0.5, rate)) * 1000 + 250;
+      const timer = setTimeout(resolve, wait);
+      src.onended = () => { clearTimeout(timer); resolve(); };
+      src.start();
+    });
+    return;
+  } catch (e) {
+    const url = URL.createObjectURL(blob);
+    objectUrls.push(url);
+    await playSrc(url, rate, gen);
+  }
+}
+async function fetchProxyAudio(chunk, lang) {
+  const url = PROXY_TTS + "?text=" + encodeURIComponent(chunk) + "&lang=" + encodeURIComponent(langCode(lang));
+  const res = await fetch(url, { referrerPolicy: "no-referrer", cache: "no-store" });
+  if (!res.ok) throw new Error("proxy " + res.status);
+  const blob = await res.blob();
+  if (!blob || blob.size < 400) throw new Error("empty");
+  return blob;
+}
 async function speakCloud(text, lang, rate, gen) {
-  const tls = lang === "cantonese" ? YUE_TLS : [lang === "mandarin" ? "zh-TW" : lang === "english_uk" ? "en-GB" : "en-US"];
   const chunks = chunkText(text, lang.startsWith("english") ? 160 : 80);
   for (const chunk of chunks) {
     if (gen !== speakGen) return;
     let ok = false, last = null;
-    outer: for (const tl of tls) {
-      for (const ep of GOOGLE_ENDPOINTS) {
-        const client = ep.indexOf("googleapis") >= 0 ? "gtx" : "tw-ob";
-        const url = ep + "?ie=UTF-8&client=" + client + "&tl=" + encodeURIComponent(tl) + "&q=" + encodeURIComponent(chunk) + "&textlen=" + encodeURIComponent(String(chunk.length));
-        try { await playSrc(url, rate, gen); ok = true; break outer; }
-        catch (e) { last = e; }
+    try {
+      const blob = await fetchProxyAudio(chunk, lang);
+      await playBlob(blob, rate, gen);
+      ok = true;
+    } catch (e) { last = e; }
+    if (!ok) {
+      const tls = lang === "cantonese" ? YUE_TLS : [langCode(lang)];
+      outer: for (const tl of tls) {
+        for (const ep of GOOGLE_ENDPOINTS) {
+          const client = ep.indexOf("googleapis") >= 0 ? "gtx" : "tw-ob";
+          const url = ep + "?ie=UTF-8&client=" + client + "&tl=" + encodeURIComponent(tl) + "&q=" + encodeURIComponent(chunk);
+          try { await playSrc(url, rate, gen); ok = true; break outer; }
+          catch (e) { last = e; }
+        }
       }
     }
     if (!ok) throw last || new Error("cloud");
@@ -246,13 +318,17 @@ async function speakText(text, lang, rate, enginePref) {
   const value = (text || "").trim();
   if (!value) return;
   const gen = ++speakGen;
+  await unlockAudio();
   const info = inspectEngine(lang, enginePref);
   const wantCloud = info.source === "cloud" || enginePref === "cloud";
   if (wantCloud) {
     try { await speakCloud(value, lang, rate, gen); return; }
     catch (e) { if (lang === "cantonese" && !pickVoice("cantonese")) throw new Error("cantonese-unavailable"); }
   }
-  if (lang === "cantonese" && !pickVoice("cantonese")) { await speakCloud(value, lang, rate, gen); return; }
+  if (lang === "cantonese" && !pickVoice("cantonese")) {
+    await speakCloud(value, lang, rate, gen);
+    return;
+  }
   await speakSystem(value, lang, rate, gen);
 }
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -263,9 +339,17 @@ function playBeep(freq, dur, type) {
     const gain = audioCtx.createGain();
     osc.type = type || "sine";
     osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.07, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
     osc.connect(gain); gain.connect(audioCtx.destination);
     osc.start(); osc.stop(audioCtx.currentTime + dur);
   } catch (e) {}
 }
+document.addEventListener("touchstart", function onceUnlock() {
+  unlockAudio();
+  document.removeEventListener("touchstart", onceUnlock, true);
+}, true);
+document.addEventListener("click", function onceUnlockClick() {
+  unlockAudio();
+  document.removeEventListener("click", onceUnlockClick, true);
+}, true);
