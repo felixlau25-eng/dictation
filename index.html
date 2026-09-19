@@ -6,7 +6,7 @@
   <meta name="referrer" content="no-referrer">
   <title>自主默書小助手 - 粵語報讀 · 詞語 / 句子 / 篇章</title>
   <meta name="description" content="功課班學生自行聽寫對卷。香港粵語報讀，支援詞語、句子、篇章、拍照輸入與默書庫。">
-  <link rel="stylesheet" href="style.css?v=20260919b">
+  <link rel="stylesheet" href="style.css?v=20260919c">
 </head>
 <body>
 <audio id="ttsPlayer" referrerpolicy="no-referrer" playsinline webkit-playsinline preload="auto"></audio>
@@ -20,13 +20,11 @@
       <p class="subtitle">功課班自行聽寫對卷 · 香港粵語報讀 · 默書庫</p>
     </div>
   </header>
-
   <section class="card" id="setupView">
     <div class="seg" role="tablist">
       <button type="button" class="active" id="tabPaper" onclick="switchMode('paper')">紙筆實戰</button>
       <button type="button" id="tabTyping" onclick="switchMode('typing')">螢幕打字</button>
     </div>
-
     <div style="margin-top:20px">
       <span class="label">默書範圍</span>
       <div class="seg seg-3">
@@ -36,7 +34,6 @@
       </div>
       <p class="hint" id="kindHint">生字、詞彙、成語。一行一個，或用逗號分隔。</p>
     </div>
-
     <div style="margin-top:16px">
       <div class="row">
         <label for="dictText">默書內容</label>
@@ -93,7 +90,6 @@
         <button class="chip danger" onclick="clearText()">清空</button>
       </div>
     </div>
-
     <div class="grid">
       <div>
         <label for="langSelect">報讀語言</label>
@@ -148,13 +144,11 @@
         </label>
       </div>
     </div>
-
     <div class="engine" id="engineBox">
       <strong id="engineLabel">雲端香港粵語</strong>
       <span id="engineDetail">Google 粵語（yue）· 書面語字音，唔會讀成普通話</span>
     </div>
     <p class="hint" id="testStatus"></p>
-
     <div class="actions">
       <button class="btn btn-sec" onclick="testVoice()">試聽發音</button>
       <button class="btn btn-ghost" onclick="testBeep()">測試喇叭</button>
@@ -162,7 +156,6 @@
     </div>
     <p class="tip" id="modeNotice">紙筆模式：可拍照或從默書庫提取。系統會先報題號再報讀。</p>
   </section>
-
   <section class="card hidden" id="runnerView">
     <div class="topbar">
       <button class="btn btn-ghost" onclick="quitRunner()">結束並返回</button>
@@ -192,7 +185,6 @@
       <button class="btn btn-ghost" style="color:var(--seal)" onclick="finishDictationEarly()">提前結束，直接看答案</button>
     </p>
   </section>
-
   <section class="card hidden" id="reviewView">
     <h2 class="review-title">默書完成，請拿出紅筆對卷</h2>
     <p class="hint">對照答案，圈出寫錯的字，並標記對錯以便重溫。</p>
@@ -203,9 +195,9 @@
       <button class="btn btn-sec" onclick="backToHome()">返回主選單</button>
     </div>
   </section>
-
   <footer>專為功課班自主學習設計 · 粵語報讀 · 默書庫</footer>
 </div>
-<script src="app.js?v=20260919b" defer></script>
+<script src="app-tts.js?v=20260919c"></script>
+<script src="app.js?v=20260919c"></script>
 </body>
 </html>
